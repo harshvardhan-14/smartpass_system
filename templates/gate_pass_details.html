@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Gate Pass - Smart Gate Pass System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card-custom p-5">
+                <h2 class="text-center mb-4">✅ Gate Pass Generated Successfully</h2>
+                
+                <div class="alert alert-success mb-4">
+                    <h5>Visitor is authorized to enter!</h5>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Gate Pass ID</h6>
+                        <h3 class="badge-custom">{{ gate_pass.pass_id }}</h3>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <h6 class="text-muted">Issue Time</h6>
+                        <p>{{ gate_pass.issue_time|date:"d-M-Y H:i" }}</p>
+                    </div>
+                </div>
+                
+                <div class="border-top border-bottom py-4 mb-4">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Visitor Details</h6>
+                            <p class="mb-1"><strong>Name:</strong> {{ visitor.visitor_name }}</p>
+                            <p class="mb-1"><strong>Mobile:</strong> {{ visitor.mobile_number }}</p>
+                            <p class="mb-1"><strong>Purpose:</strong> {{ visitor.purpose }}</p>
+                            {% if visitor.visitor_photo %}
+                                <div class="mb-2">
+                                    <img src="{{ visitor.visitor_photo.url }}" alt="Visitor Photo" class="img-thumbnail img-thumb-md">
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Resident Details</h6>
+                            <p class="mb-1"><strong>Name:</strong> {{ resident.user.get_full_name }}</p>
+                            <p class="mb-1"><strong>Flat Number:</strong> {{ resident.flat_number }}</p>
+                            <p class="mb-1"><strong>Building:</strong> {{ resident.building_name }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Entry Time</h6>
+                        <p>{{ visitor.entry_time|date:"d-M-Y H:i:s" }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Pass Valid Till</h6>
+                        <p>{{ gate_pass.valid_till|date:"d-M-Y H:i:s" }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Status</h6>
+                        <span class="badge bg-success">{{ gate_pass.get_status_display }}</span>
+                    </div>
+                </div>
+                
+                {% if gate_pass.qr_code %}
+                    <div class="text-center mb-4">
+                        <h6 class="text-muted">QR Code</h6>
+                        <img src="{{ gate_pass.qr_code.url }}" alt="QR Code" class="qr-preview img-fluid">
+                    </div>
+                {% endif %}
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <a href="{% url 'visitors:visitor_dashboard' %}" class="btn btn-primary-custom btn-lg w-100">
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

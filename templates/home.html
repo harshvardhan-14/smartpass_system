@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Smart Gate Pass System{% endblock %}
+
+{% block content %}
+<div class="home-page">
+    <section class="home-hero" aria-labelledby="home-hero-title">
+        <div class="home-hero__grid-bg" aria-hidden="true"></div>
+        <div class="home-hero__flare" aria-hidden="true"></div>
+        <div class="home-hero__accent-line" aria-hidden="true"></div>
+        <div class="container home-hero__container">
+            <div class="row align-items-center g-4 g-xl-5">
+                <div class="col-lg-6 home-hero__copy">
+                    <p class="home-hero__kicker">Secure access · OTP · QR</p>
+                    <h1 id="home-hero-title" class="home-hero__display">
+                        <span class="home-hero__display-line">Blackout</span>
+                        <span class="home-hero__display-line home-hero__display-line--fire">the chaos</span>
+                    </h1>
+                    <p class="home-hero__lead">
+                        Visitor registration, resident approvals, digital passes, and tamper-evident logs—engineered for high-traffic gates and compliance audits.
+                    </p>
+                    <div class="home-hero__chips" role="list">
+                        <span class="hero-chip hero-chip--accent" role="listitem">Live in / out</span>
+                        <span class="hero-chip hero-chip--outline" role="listitem">SMS OTP</span>
+                        <span class="hero-chip hero-chip--outline" role="listitem">QR verify</span>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="home-hero__panel" aria-hidden="true">
+                        <div class="hero-panel__glow"></div>
+                        <div class="hero-panel__grid">
+                            <div class="hero-stat hero-stat--wide">
+                                <span class="hero-stat__label">Posture</span>
+                                <span class="hero-stat__value">HARDENED</span>
+                                <span class="hero-stat__hint">OTP + pass · single chain of trust</span>
+                            </div>
+                            <div class="hero-stat">
+                                <span class="hero-stat__label">Residents</span>
+                                <span class="hero-stat__value">Linked</span>
+                            </div>
+                            <div class="hero-stat">
+                                <span class="hero-stat__label">Guards</span>
+                                <span class="hero-stat__value">Live</span>
+                            </div>
+                            <div class="hero-stat hero-stat--accent">
+                                <span class="hero-stat__label">Audit</span>
+                                <span class="hero-stat__value">Export</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="home-content" aria-label="Account and capabilities">
+        <div class="container home-content__container">
+            <div class="home-content__frame">
+                <div class="home-content__frame-inner">
+                    <div class="home-layout">
+                        <aside class="home-layout__sidebar">
+                            {% if user.is_authenticated %}
+                                <div class="rail-card card-custom auth-card">
+                                    <div class="rail-card__head">
+                                        <span class="rail-card__badge">Signed in</span>
+                                        <h2 class="rail-card__title">Welcome back</h2>
+                                        <p class="rail-card__user text-muted">{{ user.username }}</p>
+                                    </div>
+                                    {% if user.user_type == 'resident' %}
+                                        <a href="{% url 'visitors:visitor_dashboard' %}" class="btn btn-primary-custom btn-lg w-100">
+                                            <i class="fas fa-th-large me-2"></i> Resident dashboard
+                                        </a>
+                                    {% elif user.user_type == 'security' %}
+                                        <a href="{% url 'visitors:visitor_dashboard' %}" class="btn btn-primary-custom btn-lg w-100">
+                                            <i class="fas fa-shield-alt me-2"></i> Guard dashboard
+                                        </a>
+                                    {% elif user.user_type == 'admin' %}
+                                        <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-primary-custom btn-lg w-100">
+                                            <i class="fas fa-cog me-2"></i> Admin dashboard
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <div class="rail-card card-custom auth-card">
+                                    <div class="rail-card__head">
+                                        <span class="rail-card__badge rail-card__badge--muted">Access</span>
+                                        <h2 class="rail-card__title">Enter the system</h2>
+                                        <p class="rail-card__hint text-muted">Residents and guards onboard in minutes.</p>
+                                    </div>
+                                    <a href="{% url 'accounts:register_resident' %}" class="btn btn-primary-custom btn-lg w-100 mb-3">
+                                        <i class="fas fa-home me-2"></i> Register as resident
+                                    </a>
+                                    <a href="{% url 'accounts:register_guard' %}" class="btn btn-secondary-accent btn-lg w-100 mb-4">
+                                        <i class="fas fa-id-badge me-2"></i> Register as guard
+                                    </a>
+                                    <div class="rail-divider">
+                                        <span>Have an account?</span>
+                                    </div>
+                                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary btn-lg w-100">
+                                        <i class="fas fa-sign-in-alt me-2"></i> Log in
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </aside>
+
+                        <div class="home-layout__primary">
+                            <div class="home-features-head">
+                                <header class="section-block__header">
+                                    <h2 class="section-block__title">Capability <span>matrix</span></h2>
+                                    <p class="section-block__desc">Six hardened workflows from lobby capture to compliance exports—same orange thread, end to end.</p>
+                                </header>
+                                <span class="home-features-meta">06 modules</span>
+                            </div>
+
+                            <div class="bento" role="list">
+                                <article class="bento__item bento__item--hero" role="listitem">
+                                    <div class="bento__icon bento__icon--amber"><i class="fas fa-user-plus"></i></div>
+                                    <h3 class="bento__heading">Instant registration</h3>
+                                    <p class="bento__text">Identity, host, and purpose captured fast—built for guards under load and noisy reception desks.</p>
+                                </article>
+                                <article class="bento__item" role="listitem">
+                                    <div class="bento__icon bento__icon--cyan"><i class="fas fa-sms"></i></div>
+                                    <h3 class="bento__heading">SMS OTP</h3>
+                                    <p class="bento__text">Residents approve or deny with expiring codes—no app install required.</p>
+                                </article>
+                                <article class="bento__item" role="listitem">
+                                    <div class="bento__icon bento__icon--violet"><i class="fas fa-ticket-alt"></i></div>
+                                    <h3 class="bento__heading">Digital pass</h3>
+                                    <p class="bento__text">Time-boxed passes with unique tokens—show or scan at the gate.</p>
+                                </article>
+                                <article class="bento__item" role="listitem">
+                                    <div class="bento__icon bento__icon--rose"><i class="fas fa-door-open"></i></div>
+                                    <h3 class="bento__heading">Entry / exit</h3>
+                                    <p class="bento__text">Immutable timestamps for every crossing—audit-ready by default.</p>
+                                </article>
+                                <article class="bento__item" role="listitem">
+                                    <div class="bento__icon bento__icon--indigo"><i class="fas fa-chart-bar"></i></div>
+                                    <h3 class="bento__heading">Reports</h3>
+                                    <p class="bento__text">Slice by date, host, or status—then open detail without losing context.</p>
+                                </article>
+                                <article class="bento__item" role="listitem">
+                                    <div class="bento__icon bento__icon--emerald"><i class="fas fa-qrcode"></i></div>
+                                    <h3 class="bento__heading">QR verify</h3>
+                                    <p class="bento__text">Camera-based verification—contactless, fast, hard to fake.</p>
+                                </article>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

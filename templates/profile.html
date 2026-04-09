@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile - Smart Gate Pass System{% endblock %}
+
+{% block content %}
+<div class="container-custom">
+    <div class="card-custom p-4 p-md-5 narrow-card narrow-card--lg">
+        <h2 class="text-center mb-4">User Profile</h2>
+        
+        {% if profile %}
+            {% if profile.user.user_type == 'resident' %}
+                {% with resident_profile=profile %}
+                    <div class="profile-info">
+                        <!-- Profile Photo Section -->
+                        <div class="text-center mb-4">
+                            {% if resident_profile.profile_photo %}
+                                <img src="{{ resident_profile.profile_photo.url }}" alt="Profile Photo" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #007bff;">
+                            {% else %}
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 150px; height: 150px; background-color: #f8f9fa; border: 3px solid #dee2e6; margin: 0 auto;">
+                                    <i class="fas fa-user fa-3x text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Username:</label>
+                            <p class="form-control-plaintext">{{ resident_profile.user.username }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Full Name:</label>
+                            <p class="form-control-plaintext">{{ resident_profile.user.get_full_name }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email:</label>
+                            <p class="form-control-plaintext">{{ resident_profile.user.email }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Phone Number:</label>
+                            <p class="form-control-plaintext">{{ resident_profile.phone_number }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Flat Number:</label>
+                            <p class="form-control-plaintext">{{ resident_profile.flat_number }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Building Name:</label>
+                            <p class="form-control-plaintext">{{ resident_profile.building_name }}</p>
+                        </div>
+                    </div>
+                {% endwith %}
+            {% elif profile.user.user_type == 'security' %}
+                {% with guard_profile=profile %}
+                    <div class="profile-info">
+                        <!-- Profile Photo Section -->
+                        <div class="text-center mb-4">
+                            {% if guard_profile.profile_photo %}
+                                <img src="{{ guard_profile.profile_photo.url }}" alt="Profile Photo" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #007bff;">
+                            {% else %}
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 150px; height: 150px; background-color: #f8f9fa; border: 3px solid #dee2e6; margin: 0 auto;">
+                                    <i class="fas fa-user fa-3x text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Username:</label>
+                            <p class="form-control-plaintext">{{ guard_profile.user.username }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Full Name:</label>
+                            <p class="form-control-plaintext">{{ guard_profile.user.get_full_name }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email:</label>
+                            <p class="form-control-plaintext">{{ guard_profile.user.email }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Phone Number:</label>
+                            <p class="form-control-plaintext">{{ guard_profile.phone_number }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Employee ID:</label>
+                            <p class="form-control-plaintext">{{ guard_profile.employee_id }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Shift:</label>
+                            <p class="form-control-plaintext">{{ guard_profile.get_shift_display }}</p>
+                        </div>
+                    </div>
+                {% endwith %}
+            {% elif profile.user.user_type == 'admin' %}
+                {% with admin_profile=profile %}
+                    <div class="profile-info">
+                        <!-- Profile Photo Section -->
+                        <div class="text-center mb-4">
+                            {% if admin_profile.profile_photo %}
+                                <img src="{{ admin_profile.profile_photo.url }}" alt="Profile Photo" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #007bff;">
+                            {% else %}
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 150px; height: 150px; background-color: #f8f9fa; border: 3px solid #dee2e6; margin: 0 auto;">
+                                    <i class="fas fa-user fa-3x text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Username:</label>
+                            <p class="form-control-plaintext">{{ admin_profile.user.username }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Full Name:</label>
+                            <p class="form-control-plaintext">{{ admin_profile.user.get_full_name }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Email:</label>
+                            <p class="form-control-plaintext">{{ admin_profile.user.email }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Phone Number:</label>
+                            <p class="form-control-plaintext">{{ admin_profile.phone_number }}</p>
+                        </div>
+                    </div>
+                {% endwith %}
+            {% endif %}
+        {% endif %}
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'accounts:edit_profile' %}" class="btn btn-primary-custom">
+                <i class="fas fa-edit me-2"></i>Edit Profile
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

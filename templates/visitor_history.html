@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Visitor History - Smart Gate Pass System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="display-5 mb-4">Visitor History</h1>
+    
+    <div class="card-custom p-4 mb-4">
+        <h5 class="mb-3">Filter Visitor History</h5>
+        
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="start_date" class="form-label">Start Date</label>
+                {{ form.start_date }}
+            </div>
+            
+            <div class="col-md-3">
+                <label for="end_date" class="form-label">End Date</label>
+                {{ form.end_date }}
+            </div>
+            
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                {{ form.status }}
+            </div>
+            
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary-custom w-100">
+                    Filter
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="card-custom p-4">
+        {% if history %}
+            <div class="table-responsive">
+                <table class="table table-custom table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Photo</th>
+                            <th>Visitor Name</th>
+                            <th>Purpose</th>
+                            <th>Entry Date</th>
+                            <th>Entry Time</th>
+                            <th>Exit Time</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in history %}
+                            <tr>
+                                <td>
+                                    {% if record.visitor.visitor_photo %}
+                                        <img src="{{ record.visitor.visitor_photo.url }}" alt="Visitor Photo" class="img-thumbnail img-thumb-sm">
+                                    {% else %}
+                                        <span class="text-muted">No Photo</span>
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ record.visitor.visitor_name }}</strong></td>
+                                <td>{{ record.purpose }}</td>
+                                <td>{{ record.entry_time|date:"d-M-Y" }}</td>
+                                <td>{{ record.entry_time|date:"H:i:s" }}</td>
+                                <td>
+                                    {% if record.exit_time %}
+                                        {{ record.exit_time|date:"H:i:s" }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if record.exit_time %}
+                                        {{ record.get_duration_display }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if record.status == 'approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% elif record.status == 'rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% elif record.status == 'wrong_otp' %}
+                                        <span class="badge bg-danger">Wrong OTP</span>
+                                    {% elif record.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% elif record.status == 'entry_failed' %}
+                                        <span class="badge bg-danger">Entry Failed</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-center text-muted py-4">No visitor history found matching your criteria.</p>
+        {% endif %}
+    </div>
+    
+    <div class="mt-4">
+        <a href="{% url 'visitors:visitor_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

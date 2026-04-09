@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard-unified.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="visitor-detail-container">
+    <div class="detail-card">
+        <div class="detail-header">
+            <h2>{{ visitor.visitor_name }}</h2>
+            <p>Visitor Details</p>
+        </div>
+        
+        <div class="detail-body">
+            {% if visitor.visitor_photo %}
+            <div class="photo-section">
+                <img src="{{ visitor.visitor_photo.url }}" alt="{{ visitor.visitor_name }}" class="visitor-photo">
+            </div>
+            {% endif %}
+            
+            <div class="info-section">
+                <h5>Personal Information</h5>
+                <div class="info-row">
+                    <span class="info-label">Full Name:</span>
+                    <span class="info-value">{{ visitor.visitor_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Mobile Number:</span>
+                    <span class="info-value">{{ visitor.mobile_number }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Purpose of Visit:</span>
+                    <span class="info-value">{{ visitor.purpose }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Identity Proof:</span>
+                    <span class="info-value">{{ visitor.get_identity_proof_display }}</span>
+                </div>
+                {% if visitor.identity_number %}
+                <div class="info-row">
+                    <span class="info-label">Identity Number:</span>
+                    <span class="info-value">{{ visitor.identity_number }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="info-section">
+                <h5>Visit Information</h5>
+                <div class="info-row">
+                    <span class="info-label">Host:</span>
+                    <span class="info-value">
+                        {% if visitor.resident %}
+                            {{ visitor.resident.user.get_full_name }} ({{ visitor.resident.flat_number }})
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Entry Time:</span>
+                    <span class="info-value">
+                        {% if visitor.entry_time %}
+                            {{ visitor.entry_time|date:"Y-m-d H:i:s" }}
+                        {% else %}
+                            Not entered yet
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Exit Time:</span>
+                    <span class="info-value">
+                        {% if visitor.exit_time %}
+                            {{ visitor.exit_time|date:"Y-m-d H:i:s" }}
+                        {% else %}
+                            Not exited yet
+                        {% endif %}
+                    </span>
+                </div>
+                {% if visitor.entry_time and visitor.exit_time %}
+                <div class="info-row">
+                    <span class="info-label">Duration:</span>
+                    <span class="info-value">
+                        {{ visitor.exit_time|timeuntil:visitor.entry_time }}
+                    </span>
+                </div>
+                {% endif %}
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value">
+                        {% if visitor_history %}
+                            <span class="status-badge status-{{ visitor_history.status }}">
+                                {{ visitor_history.status|title }}
+                            </span>
+                        {% else %}
+                            <span class="status-badge status-active">Active</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h5>Registration Details</h5>
+                <div class="info-row">
+                    <span class="info-label">Registered By:</span>
+                    <span class="info-value">
+                        {% if visitor.registered_by %}
+                            {{ visitor.registered_by.user.get_full_name }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Registration Time:</span>
+                    <span class="info-value">
+                        {% if visitor.created_at %}
+                            {{ visitor.created_at|date:"Y-m-d H:i:s" }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="detail-actions">
+                <button type="button" onclick="history.back()" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any interactive functionality if needed
+document.addEventListener('DOMContentLoaded', function() {
+    // Visitor details page loaded successfully
+    console.log('Visitor details page loaded');
+});
+</script>
+{% endblock %}

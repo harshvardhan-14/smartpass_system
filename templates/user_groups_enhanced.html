@@ -1,0 +1,515 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Groups - Smart Gate Pass System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard-unified.css' %}">
+<link rel="stylesheet" href="{% static 'css/pages/user-groups.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-user-groups">
+<div class="container py-4">
+    <!-- Admin Panel Header -->
+    <div class="admin-panel">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left"></i> Back to Admin
+                    </a>
+                    <div>
+                        <h1 class="mb-0">👥 User Groups</h1>
+                        <p class="mb-0 mt-1 opacity-75">Manage and monitor user groups across the system</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="stats-card d-inline-block">
+                    <div class="icon">👥</div>
+                    <h3>{{ total_users }}</h3>
+                    <h5>Total Users</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="icon">🏢</div>
+                <h3>{{ total_residents }}</h3>
+                <h5>Residents</h5>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="icon">👮</div>
+                <h3>{{ total_guards }}</h3>
+                <h5>Security Guards</h5>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="icon">🔐</div>
+                <h3>{{ total_admins }}</h3>
+                <h5>Administrators</h5>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="icon">✅</div>
+                <h3>{{ active_users }}</h3>
+                <h5>Active Users</h5>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Section -->
+    <div class="filter-card user-groups-filter">
+        <h5><i class="fas fa-sliders-h"></i> Filter users</h5>
+
+        <form method="GET" class="mb-3">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-4 col-md-6">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" name="search" id="search" class="form-control"
+                           placeholder="Username, name, or email…"
+                           value="{{ search_query|default:'' }}" autocomplete="off">
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label for="user_type" class="form-label">User type</label>
+                    <select name="user_type" id="user_type" class="form-select" title="User type">
+                        <option value="">All types</option>
+                        <option value="admin" {% if user_type_filter == 'admin' %}selected{% endif %}>Administrators</option>
+                        <option value="resident" {% if user_type_filter == 'resident' %}selected{% endif %}>Residents</option>
+                        <option value="security" {% if user_type_filter == 'security' %}selected{% endif %}>Security guards</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select" title="Status">
+                        <option value="">All statuses</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <label for="sort" class="form-label">Sort by</label>
+                    <select name="sort" id="sort" class="form-select" title="Sort by">
+                        <option value="username" {% if sort_by == 'username' %}selected{% endif %}>Username</option>
+                        <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Full name</option>
+                        <option value="date_joined" {% if sort_by == 'date_joined' %}selected{% endif %}>Date joined</option>
+                        <option value="last_login" {% if sort_by == 'last_login' %}selected{% endif %}>Last login</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary-custom flex-grow-1">
+                            <i class="fas fa-search"></i> Apply
+                        </button>
+                        <a href="{% url 'dashboard:user_groups' %}" class="btn btn-secondary flex-grow-1">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Filter Description -->
+        {% if filter_description and filter_description != "No filters applied" %}
+        <div class="alert alert-info d-flex align-items-center mt-3" role="alert">
+            <i class="fas fa-filter me-2"></i>
+            <div>
+                <strong>Current Filters:</strong> {{ filter_description }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- User Groups Columns -->
+    <div class="groups-card">
+        <h5><i class="fas fa-users"></i> User Groups</h5>
+        
+        {% if user_groups %}
+            <div class="row g-4">
+                <!-- Administrators Column -->
+                {% if 'Administrators' in user_groups %}
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="user-type-section">
+                            <div class="section-header admin-header">
+                                <h6><i class="fas fa-user-shield me-2"></i>Administrators</h6>
+                                <span class="badge ug-count-badge">{{ user_groups.Administrators.paginator.count }}</span>
+                            </div>
+                            <div class="section-content">
+                                {% if user_groups.Administrators %}
+                                    {% for user_data in user_groups.Administrators %}
+                                        <div class="user-item">
+                                            <div class="user-avatar admin-avatar">
+                                                {% if user_data.is_active %}
+                                                    {{ user_data.user.get_full_name|make_list|first|upper|slice:":1"|default:user_data.user.username|make_list|first|upper }}
+                                                {% else %}
+                                                    <i class="fas fa-user-slash"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div class="user-info">
+                                                <h6>{{ user_data.user.get_full_name|default:user_data.user.username }}</h6>
+                                                <small class="text-muted">@{{ user_data.user.username }}</small>
+                                                <div class="mt-1">
+                                                    {% if user_data.is_active %}
+                                                        <span class="badge bg-success">Active</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Inactive</span>
+                                                    {% endif %}
+                                                    {% if user_data.profile_deleted %}
+                                                        <span class="badge bg-warning">Deleted</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="user-actions">
+                                                <button onclick="viewUserDetails('{{ user_data.user.id }}', '{{ user_data.user.get_full_name|default:user_data.user.username }}')" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted text-center">No administrators found</p>
+                                {% endif %}
+                                {% with p=user_groups.Administrators %}
+                                {% if p.paginator.num_pages > 1 %}
+                                <nav class="ug-pagination" aria-label="Administrators pages">
+                                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                                        {% if p.has_previous %}
+                                        <li class="page-item"><a class="page-link" href="?{% if filter_query %}{{ filter_query }}&{% endif %}page_admin={{ p.previous_page_number }}&page_resident={{ page_resident }}&page_security={{ page_security }}">Prev</a></li>
+                                        {% endif %}
+                                        <li class="page-item disabled"><span class="page-link">{{ p.number }}/{{ p.paginator.num_pages }}</span></li>
+                                        {% if p.has_next %}
+                                        <li class="page-item"><a class="page-link" href="?{% if filter_query %}{{ filter_query }}&{% endif %}page_admin={{ p.next_page_number }}&page_resident={{ page_resident }}&page_security={{ page_security }}">Next</a></li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Residents Column -->
+                {% if 'Residents' in user_groups %}
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="user-type-section">
+                            <div class="section-header resident-header">
+                                <h6><i class="fas fa-home me-2"></i>Residents</h6>
+                                <span class="badge ug-count-badge">{{ user_groups.Residents.paginator.count }}</span>
+                            </div>
+                            <div class="section-content">
+                                {% if user_groups.Residents %}
+                                    {% for user_data in user_groups.Residents %}
+                                        <div class="user-item">
+                                            <div class="user-avatar resident-avatar">
+                                                {% if user_data.is_active %}
+                                                    {{ user_data.user.get_full_name|make_list|first|upper|slice:":1"|default:user_data.user.username|make_list|first|upper }}
+                                                {% else %}
+                                                    <i class="fas fa-user-slash"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div class="user-info">
+                                                <h6>{{ user_data.user.get_full_name|default:user_data.user.username }}</h6>
+                                                <small class="text-muted">@{{ user_data.user.username }}</small>
+                                                <div class="mt-1">
+                                                    {% if user_data.is_active %}
+                                                        <span class="badge bg-success">Active</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Inactive</span>
+                                                    {% endif %}
+                                                    {% if user_data.profile_deleted %}
+                                                        <span class="badge bg-warning">Deleted</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="user-actions">
+                                                <button onclick="viewUserDetails('{{ user_data.user.id }}', '{{ user_data.user.get_full_name|default:user_data.user.username }}')" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted text-center">No residents found</p>
+                                {% endif %}
+                                {% with p=user_groups.Residents %}
+                                {% if p.paginator.num_pages > 1 %}
+                                <nav class="ug-pagination" aria-label="Residents pages">
+                                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                                        {% if p.has_previous %}
+                                        <li class="page-item"><a class="page-link" href="?{% if filter_query %}{{ filter_query }}&{% endif %}page_admin={{ page_admin }}&page_resident={{ p.previous_page_number }}&page_security={{ page_security }}">Prev</a></li>
+                                        {% endif %}
+                                        <li class="page-item disabled"><span class="page-link">{{ p.number }}/{{ p.paginator.num_pages }}</span></li>
+                                        {% if p.has_next %}
+                                        <li class="page-item"><a class="page-link" href="?{% if filter_query %}{{ filter_query }}&{% endif %}page_admin={{ page_admin }}&page_resident={{ p.next_page_number }}&page_security={{ page_security }}">Next</a></li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Security Guards Column -->
+                {% if 'Security Guards' in user_groups %}
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="user-type-section">
+                            <div class="section-header security-header">
+                                <h6><i class="fas fa-shield-alt me-2"></i>Security Guards</h6>
+                                <span class="badge ug-count-badge">{% if security_guards.paginator %}{{ security_guards.paginator.count }}{% else %}0{% endif %}</span>
+                            </div>
+                            <div class="section-content">
+                                {% if security_guards %}
+                                    {% for user_data in security_guards %}
+                                        <div class="user-item">
+                                            <div class="user-avatar security-avatar">
+                                                {% if user_data.is_active %}
+                                                    {{ user_data.user.get_full_name|make_list|first|upper|slice:":1"|default:user_data.user.username|make_list|first|upper }}
+                                                {% else %}
+                                                    <i class="fas fa-user-slash"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div class="user-info">
+                                                <h6>{{ user_data.user.get_full_name|default:user_data.user.username }}</h6>
+                                                <small class="text-muted">@{{ user_data.user.username }}</small>
+                                                <div class="mt-1">
+                                                    {% if user_data.is_active %}
+                                                        <span class="badge bg-success">Active</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Inactive</span>
+                                                    {% endif %}
+                                                    {% if user_data.profile_deleted %}
+                                                        <span class="badge bg-warning">Deleted</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="user-actions">
+                                                <button onclick="viewUserDetails('{{ user_data.user.id }}', '{{ user_data.user.get_full_name|default:user_data.user.username }}')" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted text-center">No security guards found</p>
+                                {% endif %}
+                                {% if security_guards.paginator %}
+                                {% with p=security_guards %}
+                                {% if p.paginator.num_pages > 1 %}
+                                <nav class="ug-pagination" aria-label="Security guards pages">
+                                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                                        {% if p.has_previous %}
+                                        <li class="page-item"><a class="page-link" href="?{% if filter_query %}{{ filter_query }}&{% endif %}page_admin={{ page_admin }}&page_resident={{ page_resident }}&page_security={{ p.previous_page_number }}">Prev</a></li>
+                                        {% endif %}
+                                        <li class="page-item disabled"><span class="page-link">{{ p.number }}/{{ p.paginator.num_pages }}</span></li>
+                                        {% if p.has_next %}
+                                        <li class="page-item"><a class="page-link" href="?{% if filter_query %}{{ filter_query }}&{% endif %}page_admin={{ page_admin }}&page_resident={{ page_resident }}&page_security={{ p.next_page_number }}">Next</a></li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                                {% endif %}
+                                {% endwith %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Visitors Column -->
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="user-type-section">
+                        <div class="section-header visitor-header">
+                            <h6><i class="fas fa-user me-2"></i>Visitors</h6>
+                            <span class="badge ug-count-badge ug-count-badge--muted">Info</span>
+                        </div>
+                        <div class="section-content">
+                            <div class="visitor-summary">
+                                <p class="text-muted text-center">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Visitor details are managed in the Visitor Reports section
+                                </p>
+                                <div class="text-center mt-3">
+                                    <a href="{% url 'dashboard:visitor_reports' %}" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-external-link-alt me-1"></i>
+                                        View Visitor Reports
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-users-slash"></i>
+                <h5 class="text-muted">No Users Found</h5>
+                <p class="text-muted">No users found matching your criteria.</p>
+                {% if filter_description and filter_description != "No filters applied" %}
+                    <a href="{% url 'dashboard:user_groups' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewUserDetails(userId, userName) {
+    // Create a modal with user information
+    const modalHtml = `
+        <div class="modal fade" id="userDetailModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-gradient-purple text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-user-circle me-2"></i>
+                            User Details - ${userName}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-purple" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Loading user details...</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i> Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('userDetailModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+    modal.show();
+    
+    // Fetch user details via AJAX
+    fetch(`/dashboard/api/user-detail/${userId}/`)
+        .then(response => response.json())
+        .then(data => {
+            const modalBody = document.querySelector('#userDetailModal .modal-body');
+            
+            if (data.success) {
+                // Build profile info HTML based on user type
+                let profileInfoHtml = '';
+                if (data.user_type === 'admin') {
+                    profileInfoHtml = `
+                        <p><strong><i class="fas fa-building me-2"></i>Department:</strong> ${data.profile_info.department}</p>
+                        <p><strong><i class="fas fa-id-badge me-2"></i>Employee ID:</strong> ${data.profile_info.employee_id}</p>
+                        <p><strong><i class="fas fa-phone me-2"></i>Phone:</strong> ${data.profile_info.phone}</p>
+                    `;
+                } else if (data.user_type === 'resident') {
+                    profileInfoHtml = `
+                        <p><strong><i class="fas fa-home me-2"></i>Flat Number:</strong> ${data.profile_info.flat_number}</p>
+                        <p><strong><i class="fas fa-building me-2"></i>Block:</strong> ${data.profile_info.block}</p>
+                        <p><strong><i class="fas fa-phone me-2"></i>Phone:</strong> ${data.profile_info.phone}</p>
+                        <p><strong><i class="fas fa-phone-alt me-2"></i>Emergency Contact:</strong> ${data.profile_info.emergency_contact}</p>
+                    `;
+                } else if (data.user_type === 'guard' || data.user_type === 'security') {
+                    profileInfoHtml = `
+                        <p><strong><i class="fas fa-id-badge me-2"></i>Employee ID:</strong> ${data.profile_info.employee_id}</p>
+                        <p><strong><i class="fas fa-clock me-2"></i>Shift:</strong> ${data.profile_info.shift}</p>
+                        <p><strong><i class="fas fa-phone me-2"></i>Phone:</strong> ${data.profile_info.phone}</p>
+                    `;
+                }
+                
+                // Determine status badges
+                const accountStatusBadge = data.is_active ? 
+                    '<span class="badge bg-success">Active</span>' : 
+                    '<span class="badge bg-danger">Inactive</span>';
+                
+                const profileStatusBadge = data.profile_deleted ? 
+                    '<span class="badge bg-warning">Profile Deleted</span>' : 
+                    '<span class="badge bg-primary">Active Profile</span>';
+                
+                modalBody.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card border-purple">
+                                <div class="card-header bg-light-purple">
+                                    <h6 class="mb-0"><i class="fas fa-user me-2"></i>User Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong><i class="fas fa-hashtag me-2"></i>User ID:</strong> ${data.user_id}</p>
+                                    <p><strong><i class="fas fa-user me-2"></i>Full Name:</strong> ${data.full_name}</p>
+                                    <p><strong><i class="fas fa-at me-2"></i>Username:</strong> ${data.username}</p>
+                                    <p><strong><i class="fas fa-envelope me-2"></i>Email:</strong> ${data.email}</p>
+                                    <p><strong><i class="fas fa-user-tag me-2"></i>User Type:</strong> 
+                                        <span class="badge bg-info">${data.user_type.charAt(0).toUpperCase() + data.user_type.slice(1)}</span>
+                                    </p>
+                                    <p><strong><i class="fas fa-calendar me-2"></i>Date Joined:</strong> ${data.date_joined}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-purple">
+                                <div class="card-header bg-light-purple">
+                                    <h6 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Account Status</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong><i class="fas fa-toggle-on me-2"></i>Account Status:</strong> ${accountStatusBadge}</p>
+                                    <p><strong><i class="fas fa-id-card me-2"></i>Profile Status:</strong> ${profileStatusBadge}</p>
+                                    <p><strong><i class="fas fa-sign-in-alt me-2"></i>Last Login:</strong> ${data.last_login}</p>
+                                    <hr>
+                                    <h6 class="text-purple"><i class="fas fa-info-circle me-2"></i>Profile Details</h6>
+                                    ${profileInfoHtml}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-info-circle me-2"></i>Note</h6>
+                        <p class="mb-0">This is the complete user information. For more detailed management options, please refer to the user management section.</p>
+                    </div>
+                `;
+            } else {
+                modalBody.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Error</h6>
+                        <p class="mb-0">${data.error || 'Failed to load user details'}</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            const modalBody = document.querySelector('#userDetailModal .modal-body');
+            modalBody.innerHTML = `
+                <div class="alert alert-danger">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Error</h6>
+                    <p class="mb-0">Failed to load user details. Please try again.</p>
+                </div>
+            `;
+        });
+}
+</script>
+{% endblock %}

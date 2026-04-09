@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Resident Dashboard - Smart Gate Pass System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard-unified.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="resident-dashboard">
+    <div class="admin-panel">
+        <div class="d-flex align-items-center mb-3">
+            <!-- Profile Photo -->
+            <div class="me-3">
+                {% if resident.profile_photo %}
+                    <img src="{{ resident.profile_photo.url }}" alt="Profile Photo" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid #007bff;">
+                {% else %}
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; background-color: #f8f9fa; border: 2px solid #dee2e6;">
+                        <i class="fas fa-user fa-2x text-muted"></i>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Welcome Message -->
+            <div>
+                <h1 class="mb-1">Welcome, {{ resident.user.get_full_name }}!</h1>
+                <p class="mb-0">Resident Dashboard - Flat {{ resident.flat_number }}</p>
+                <small class="text-muted">
+                    <a href="{% url 'accounts:edit_profile' %}" class="btn btn-sm btn-outline-secondary mt-2">
+                        <i class="fas fa-edit me-1"></i>Edit Profile
+                    </a>
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stats-card">
+            <div class="icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <h3>{{ today_visitors }}</h3>
+            <h5>Today's Visitors</h5>
+        </div>
+        <div class="stats-card">
+            <div class="icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h3>{{ pending_visitors }}</h3>
+            <h5>Pending Visits</h5>
+        </div>
+        <div class="stats-card">
+            <div class="icon">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <h3>{{ recent_visitors|length }}</h3>
+            <h5>This Week</h5>
+        </div>
+        <div class="stats-card">
+            <div class="icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3>Active</h3>
+            <h5>Your Status</h5>
+        </div>
+    </div>
+    
+    <!-- Recent Visitors -->
+    <div class="visitor-section">
+        <div class="section-header">
+            <h3>Recent Visitors</h3>
+            <a href="{% url 'visitors:visitor_history' %}" class="action-btn">View All</a>
+        </div>
+        
+        {% if recent_visitors %}
+            <table class="visitor-table">
+                <thead>
+                    <tr>
+                        <th>Visitor Name</th>
+                        <th>Purpose</th>
+                        <th>Entry Time</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visitor_data in recent_visitors %}
+                    <tr>
+                        <td>
+                            <strong>{{ visitor_data.visitor.visitor_name }}</strong>
+                            <br>
+                            <small class="text-muted">{{ visitor_data.visitor.mobile_number }}</small>
+                        </td>
+                        <td>{{ visitor_data.visitor.purpose }}</td>
+                        <td>
+                            {% if visitor_data.visitor.entry_time %}
+                                {{ visitor_data.visitor.entry_time|date:"d-M-Y H:i" }}
+                            {% else %}
+                                <span class="text-muted">Not entered</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if visitor_data.history %}
+                                {{ visitor_data.history.get_duration_display }}
+                            {% elif visitor_data.visitor.exit_time and visitor_data.visitor.entry_time %}
+                                {% with duration=visitor_data.visitor.exit_time|timeuntil:visitor_data.visitor.entry_time %}
+                                    {{ duration }}
+                                {% endwith %}
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if visitor_data.status == 'completed' %}
+                                <span class="status-badge status-completed">Completed</span>
+                            {% elif visitor_data.status == 'active' %}
+                                <span class="status-badge status-active">Active</span>
+                            {% elif visitor_data.status == 'rejected' %}
+                                <span class="status-badge status-pending">Rejected</span>
+                            {% else %}
+                                <span class="status-badge status-pending">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="action-btn" onclick="viewDetails('{{ visitor_data.visitor.id }}')">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-users"></i>
+                <h5>No Recent Visitors</h5>
+                <p>You don't have any recent visitor records.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function viewDetails(visitorId) {
+    if (visitorId) {
+        window.open(`/visitors/detail/${visitorId}/`, '_blank', 'width=800,height=600');
+    }
+}
+
+// Quick action handlers
+document.addEventListener('DOMContentLoaded', function() {
+    const quickActions = document.querySelectorAll('.quick-action-card');
+    
+    quickActions.forEach(action => {
+        action.addEventListener('click', function() {
+            const title = this.querySelector('h5').textContent;
+            
+            switch(title) {
+                case 'Pre-register Visitor':
+                    window.location.href = '{% url "visitors:register_visitor" %}';
+                    break;
+                case 'View History':
+                    window.location.href = '{% url "visitors:visitor_history" %}';
+                    break;
+                case 'Notifications':
+                    alert('Notifications feature coming soon!');
+                    break;
+                case 'Settings':
+                    alert('Settings feature coming soon!');
+                    break;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

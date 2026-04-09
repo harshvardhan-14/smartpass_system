@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Audit Logs - Smart Gate Pass System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard-unified.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Admin Panel Header -->
+    <div class="admin-panel">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left"></i> Back to Admin
+                    </a>
+                    <div>
+                        <h1 class="mb-0">🔍 System Audit Logs</h1>
+                        <p class="mb-0 mt-1 opacity-75">Monitor and track all system activities in real-time</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="stats-card d-inline-block">
+                    <h3 class="mb-0">{{ total_activities }}</h3>
+                    <small class="text-muted">Total Activities</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Section -->
+    <div class="filter-card">
+        <h5><i class="fas fa-filter"></i> Filter Activities</h5>
+        
+        <form method="GET" class="mb-4">
+            <div class="row g-3">
+                <!-- Search Box -->
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" name="search" id="search" class="form-control" 
+                           placeholder="Search activities..." 
+                           value="{{ search_query|default:'' }}">
+                    <small class="text-muted">Search description, user, IP</small>
+                </div>
+                
+                <!-- Action Type Filter -->
+                <div class="col-md-2">
+                    <label for="action_type" class="form-label">Action Type</label>
+                    <select name="action_type" id="action_type" class="form-select">
+                        <option value="all">All Actions</option>
+                        {% for action_value, action_label in action_types %}
+                        <option value="{{ action_value }}" {% if action_type == action_value %}selected{% endif %}>
+                            {{ action_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Status Filter -->
+                <div class="col-md-2">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="all">All Status</option>
+                        {% for status_value, status_label in status_types %}
+                        <option value="{{ status_value }}" {% if status_filter == status_value %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- User Filter -->
+                <div class="col-md-2">
+                    <label for="user" class="form-label">User</label>
+                    <select name="user" id="user" class="form-select">
+                        <option value="all">All Users</option>
+                        {% for user in users %}
+                        <option value="{{ user.id }}" {% if user_filter == user.id|stringformat:"s" %}selected{% endif %}>
+                            {{ user.get_full_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Date Range -->
+                <div class="col-md-1">
+                    <label for="start_date" class="form-label">From</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control" 
+                           value="{{ start_date|default:'' }}">
+                </div>
+                
+                <div class="col-md-1">
+                    <label for="end_date" class="form-label">To</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control" 
+                           value="{{ end_date|default:'' }}">
+                </div>
+                
+                <!-- IP Filter -->
+                <div class="col-md-1">
+                    <label for="ip" class="form-label">IP Address</label>
+                    <input type="text" name="ip" id="ip" class="form-control" 
+                           placeholder="IP" value="{{ ip_filter|default:'' }}">
+                </div>
+            </div>
+            
+            <!-- Filter Actions -->
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="filter-actions d-flex gap-2">
+                        <button type="submit" class="btn btn-primary-custom">
+                            <i class="fas fa-search"></i> Apply Filters
+                        </button>
+                        <a href="{% url 'audit:audit_logs' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Clear Filters
+                        </a>
+                        <button class="btn btn-success" onclick="exportAuditData()">
+                            <i class="fas fa-download"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Filter Description -->
+        {% if filter_description and filter_description != "No filters applied" %}
+        <div class="alert alert-info d-flex align-items-center mt-3" role="alert">
+            <i class="fas fa-filter me-2"></i>
+            <div>
+                <strong>Current Filters:</strong> {{ filter_description }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+                
+                <!-- Data Table Section -->
+    <div class="data-table-panel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">📊 Activity Records</h5>
+            <div class="text-muted">
+                <small>Showing {{ activities.start_index|default:1 }}-{{ activities.end_index|default:activities|length }} of {{ total_activities }} activities</small>
+            </div>
+        </div>
+                
+        <!-- Audit Logs Table -->
+        {% if activities %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-clock"></i> Timestamp</th>
+                            <th><i class="fas fa-user"></i> User</th>
+                            <th><i class="fas fa-cog"></i> Action</th>
+                            <th><i class="fas fa-info-circle"></i> Description</th>
+                            <th><i class="fas fa-check-circle"></i> Status</th>
+                            <th><i class="fas fa-network-wired"></i> IP Address</th>
+                            <th><i class="fas fa-bullseye"></i> Target</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in activities %}
+                            <tr>
+                                <td>
+                                    <small class="text-muted">{{ activity.timestamp|date:"M d, Y" }}</small><br>
+                                    <strong>{{ activity.timestamp|date:"H:i:s" }}</strong>
+                                </td>
+                                <td>
+                                    {% if activity.user %}
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <i class="fas fa-user-circle text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <strong>{{ activity.user.get_full_name }}</strong><br>
+                                                <small class="text-muted">@{{ activity.user.username }}</small>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">
+                                            <i class="fas fa-user-slash"></i> Anonymous
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if activity.status == 'success' %}
+                                        <span class="badge badge-success">{{ activity.get_action_type_display }}</span>
+                                    {% elif activity.status == 'failure' %}
+                                        <span class="badge badge-danger">{{ activity.get_action_type_display }}</span>
+                                    {% elif activity.status == 'warning' %}
+                                        <span class="badge badge-warning">{{ activity.get_action_type_display }}</span>
+                                    {% else %}
+                                        <span class="badge badge-info">{{ activity.get_action_type_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span title="{{ activity.description|truncatechars:100 }}">
+                                        {{ activity.description|truncatechars:50 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if activity.status == 'success' %}
+                                        <span class="badge badge-success">{{ activity.get_status_display }}</span>
+                                    {% elif activity.status == 'failure' %}
+                                        <span class="badge badge-danger">{{ activity.get_status_display }}</span>
+                                    {% elif activity.status == 'warning' %}
+                                        <span class="badge badge-warning">{{ activity.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge badge-info">{{ activity.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if activity.ip_address %}
+                                        <code>{{ activity.ip_address }}</code>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if activity.target_model %}
+                                        <small>{{ activity.target_model }}</small><br>
+                                        {% if activity.target_id %}
+                                            <code>ID: {{ activity.target_id }}</code>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if activities.has_other_pages %}
+                <nav aria-label="Audit logs pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if activities.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ activities.previous_page_number }}&{{ request.GET.urlencode|cut:'page=' }}">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="fas fa-chevron-left"></i> Previous</span>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in activities.paginator.page_range %}
+                            {% if activities.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > activities.number|add:'-3' and num < activities.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}&{{ request.GET.urlencode|cut:'page=' }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if activities.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ activities.next_page_number }}&{{ request.GET.urlencode|cut:'page=' }}">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Next <i class="fas fa-chevron-right"></i></span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+            
+            <!-- Results Summary -->
+            <div class="mt-3 text-muted">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small>
+                        {% if filter_description and filter_description != "No filters applied" %}
+                            {{ filter_description }}
+                        {% else %}
+                            Showing all activities
+                        {% endif %}
+                    </small>
+                    <small>
+                        Page {{ activities.number }} of {{ activities.paginator.num_pages }}
+                    </small>
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-history"></i>
+                <h5 class="text-muted">No Audit Activities Found</h5>
+                <p class="text-muted">
+                    {% if filter_description and filter_description != "No filters applied" %}
+                        No audit activities match current filters. Try adjusting your search criteria.
+                    {% else %}
+                        No audit activities found in the system.
+                    {% endif %}
+                </p>
+                {% if filter_description and filter_description != "No filters applied" %}
+                    <a href="{% url 'audit:audit_logs' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

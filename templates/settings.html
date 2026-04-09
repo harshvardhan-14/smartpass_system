@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings - Smart Gate Pass System{% endblock %}
+
+{% block content %}
+<div class="container-custom">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-cog me-2"></i>Settings</h2>
+        <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+    
+    <div class="card-custom p-4">
+        <h5><i class="fas fa-sliders-h me-2"></i>System Settings</h5>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-4">
+                        <h6><i class="fas fa-clock me-2"></i>OTP Settings</h6>
+                        <div class="form-group">
+                            <label class="form-label">OTP Expiry Time (minutes)</label>
+                            <input type="number" name="otp_expiry" class="form-control" value="{{ settings.otp_expiry_minutes }}" min="1" max="60">
+                            <small class="form-text text-muted">Time in minutes before OTP expires</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Max OTP Attempts</label>
+                            <input type="number" name="max_attempts" class="form-control" value="{{ settings.max_otp_attempts }}" min="1" max="10">
+                            <small class="form-text text-muted">Maximum number of OTP attempts allowed</small>
+                        </div>
+                    </div>
+                </div>
+            
+            <div class="col-md-6">
+                <div class="mb-4">
+                    <h6><i class="fas fa-ticket-alt me-2"></i>Gate Pass Settings</h6>
+                    <div class="form-group">
+                        <label class="form-label">Gate Pass Validity (hours)</label>
+                        <input type="number" class="form-control" value="24" min="1" max="168">
+                        <small class="form-text text-muted">Time in hours before gate pass expires</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Auto-generate QR Code</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" checked>
+                            <label class="form-check-label">Generate QR code for gate passes</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-4">
+                    <h6><i class="fas fa-bell me-2"></i>Notification Settings</h6>
+                    <div class="form-group">
+                        <label class="form-label">SMS Notifications</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" checked>
+                            <label class="form-check-label">Send SMS notifications for OTP</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" checked>
+                            <label class="form-check-label">Send SMS notifications for visitor updates</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="mb-4">
+                    <h6><i class="fas fa-shield-alt me-2"></i>Security Settings</h6>
+                    <div class="form-group">
+                        <label class="form-label">Session Timeout (minutes)</label>
+                        <input type="number" class="form-control" value="30" min="5" max="120">
+                        <small class="form-text text-muted">Auto-logout after inactivity</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password Policy</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" checked>
+                            <label class="form-check-label">Require strong passwords</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary-custom">
+                <i class="fas fa-save me-2"></i>Save Settings
+            </button>
+            <button type="button" class="btn btn-secondary ms-2">
+                <i class="fas fa-undo me-2"></i>Reset to Defaults
+            </button>
+        </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

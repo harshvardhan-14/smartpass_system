@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+
+{% block title %}Register Security Guard - Smart Gate Pass System{% endblock %}
+
+{% block content %}
+<div class="container-custom">
+    <div class="card-custom p-4 p-md-5 narrow-card narrow-card--md">
+        <h2 class="text-center mb-4">Register as Security Guard</h2>
+        
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="first_name" class="form-label">First Name</label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.first_name.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="last_name" class="form-label">Last Name</label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.last_name.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.username.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.password.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                {{ form.confirm_password }}
+                {% if form.confirm_password.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.confirm_password.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="phone_number" class="form-label">Phone Number</label>
+                {{ form.phone_number }}
+                {% if form.phone_number.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.phone_number.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="shift" class="form-label">Shift</label>
+                {{ form.shift }}
+                {% if form.shift.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.shift.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Profile Photo Section -->
+            <div class="mb-4">
+                <label for="profile_photo" class="form-label fw-bold">Profile Photo</label>
+                
+                <!-- Photo Options -->
+                <div class="mb-3">
+                    <div class="btn-group w-100 mb-3" role="group">
+                        <button type="button" class="btn btn-outline-primary" onclick="showFileUpload()">
+                            <i class="fas fa-upload me-2"></i>Upload Photo
+                        </button>
+                        <button type="button" class="btn btn-outline-success" onclick="showCamera()">
+                            <i class="fas fa-camera me-2"></i>Take Photo
+                        </button>
+                    </div>
+                    
+                    <!-- File Upload Section -->
+                    <div id="fileUploadSection" class="mb-3">
+                        {{ form.profile_photo }}
+                        {% if form.profile_photo.errors %}
+                            <div class="alert alert-danger mt-2">{{ form.profile_photo.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Upload a clear photo of your face. Max size: 5MB. Formats: JPEG, PNG
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Camera Section -->
+                    <div id="cameraSection" class="mb-3" style="display: none;">
+                        <div class="text-center mb-3">
+                            <video id="camera" width="320" height="240" autoplay playsinline class="border rounded mx-auto" style="display: none;"></video>
+                            <canvas id="canvas" width="320" height="240" style="display: none;"></canvas>
+                            
+                            <div id="cameraControls" class="mt-3" style="display: none;">
+                                <button type="button" class="btn btn-primary me-2" onclick="capturePhoto()">
+                                    <i class="fas fa-camera me-2"></i>Capture
+                                </button>
+                                <button type="button" class="btn btn-secondary me-2" onclick="retakePhoto()">
+                                    <i class="fas fa-redo me-2"></i>Retake
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="stopCamera()">
+                                    <i class="fas fa-stop me-2"></i>Stop Camera
+                                </button>
+                            </div>
+                            
+                            <div id="capturedPreview" class="mt-3" style="display: none;">
+                                <img id="previewImage" class="border rounded mx-auto" style="max-width: 200px; max-height: 200px;">
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-success btn-sm" onclick="acceptPhoto()">
+                                        <i class="fas fa-check me-2"></i>Use This Photo
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="retakePhoto()">
+                                        <i class="fas fa-redo me-2"></i>Take Another
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="cameraError" class="alert alert-danger" style="display: none;">
+                                <p id="errorMessage"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary-custom w-100 btn-lg">
+                Register
+            </button>
+        </form>
+        
+        <hr class="my-4">
+        
+        <p class="text-center">Already have an account? <a href="{% url 'accounts:login' %}">Login here</a></p>
+    </div>
+</div>
+
+<script>
+let stream = null;
+let cameraOn = false;
+let capturedImageData = null;
+
+function showFileUpload() {
+    document.getElementById('fileUploadSection').style.display = 'block';
+    document.getElementById('cameraSection').style.display = 'none';
+    if (cameraOn) {
+        stopCamera();
+    }
+}
+
+function showCamera() {
+    document.getElementById('fileUploadSection').style.display = 'none';
+    document.getElementById('cameraSection').style.display = 'block';
+    startCamera();
+}
+
+function startCamera() {
+    const video = document.getElementById('camera');
+    const cameraError = document.getElementById('cameraError');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    // Hide error message
+    cameraError.style.display = 'none';
+    
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: 'user'
+            },
+            audio: false 
+        })
+        .then(function(s) {
+            stream = s;
+            video.srcObject = stream;
+            video.style.display = 'block';
+            document.getElementById('cameraControls').style.display = 'block';
+            cameraOn = true;
+            
+            // Hide captured preview if showing
+            document.getElementById('capturedPreview').style.display = 'none';
+        })
+        .catch(function(err) {
+            console.error("Camera access denied: ", err);
+            let errorMsg = "Camera access denied. ";
+            
+            if (err.name === 'NotAllowedError') {
+                errorMsg += "Please allow camera access in your browser settings and try again.";
+            } else if (err.name === 'NotFoundError') {
+                errorMsg += "No camera found. Please connect a camera and try again.";
+            } else if (err.name === 'NotReadableError') {
+                errorMsg += "Camera is already in use by another application.";
+            } else {
+                errorMsg += "Please check your camera permissions and try again.";
+            }
+            
+            errorMessage.textContent = errorMsg;
+            cameraError.style.display = 'block';
+        });
+    } else {
+        errorMessage.textContent = "Camera not supported in this browser. Please use a modern browser like Chrome, Firefox, or Safari.";
+        cameraError.style.display = 'block';
+    }
+}
+
+function stopCamera() {
+    const video = document.getElementById('camera');
+    const cameraError = document.getElementById('cameraError');
+    
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+    
+    video.srcObject = null;
+    video.style.display = 'none';
+    document.getElementById('cameraControls').style.display = 'none';
+    document.getElementById('capturedPreview').style.display = 'none';
+    cameraError.style.display = 'none';
+    cameraOn = false;
+}
+
+function capturePhoto() {
+    const video = document.getElementById('camera');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+    
+    if (cameraOn && video.readyState === video.HAVE_ENOUGH_DATA) {
+        // Set canvas dimensions to match video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Draw video frame to canvas
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to blob and store
+        canvas.toBlob(function(blob) {
+            capturedImageData = blob;
+            
+            // Show preview
+            const imageUrl = canvas.toDataURL('image/jpeg', 0.8);
+            const previewImage = document.getElementById('previewImage');
+            previewImage.src = imageUrl;
+            
+            // Show captured preview, hide video
+            video.style.display = 'none';
+            document.getElementById('cameraControls').style.display = 'none';
+            document.getElementById('capturedPreview').style.display = 'block';
+        }, 'image/jpeg', 0.8);
+    } else {
+        alert("Camera not ready. Please wait a moment and try again.");
+    }
+}
+
+function retakePhoto() {
+    // Show video again, hide preview
+    const video = document.getElementById('camera');
+    video.style.display = 'block';
+    document.getElementById('cameraControls').style.display = 'block';
+    document.getElementById('capturedPreview').style.display = 'none';
+    capturedImageData = null;
+}
+
+function acceptPhoto() {
+    console.log("DEBUG: acceptPhoto called");
+    console.log("DEBUG: capturedImageData:", capturedImageData);
+    
+    if (capturedImageData) {
+        console.log("DEBUG: Creating file from captured image data");
+        // Create a file from the captured image data
+        const file = new File([capturedImageData], "guard_photo.jpg", { 
+            type: "image/jpeg",
+            lastModified: Date.now()
+        });
+        
+        console.log("DEBUG: Created file:", file);
+        console.log("DEBUG: File name:", file.name);
+        console.log("DEBUG: File size:", file.size);
+        console.log("DEBUG: File type:", file.type);
+        
+        // Create a DataTransfer object to set the file
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        
+        console.log("DEBUG: DataTransfer created:", dataTransfer);
+        console.log("DEBUG: DataTransfer items:", dataTransfer.items);
+        
+        // Set file to the profile photo input
+        const fileInput = document.getElementById('profile_photo');
+        console.log("DEBUG: File input found:", fileInput);
+        console.log("DEBUG: File input current files:", fileInput.files);
+        
+        if (fileInput) {
+            // Clear any existing files
+            fileInput.value = '';
+            
+            // Set new files
+            fileInput.files = dataTransfer.files;
+            
+            console.log("DEBUG: File set to input:", fileInput.files);
+            console.log("DEBUG: File input files length:", fileInput.files.length);
+            console.log("DEBUG: File input files[0]:", fileInput.files[0]);
+            
+            // Verify the file was set correctly
+            if (fileInput.files.length > 0) {
+                console.log("SUCCESS: File successfully set to input");
+                console.log("File name:", fileInput.files[0].name);
+                console.log("File size:", fileInput.files[0].size);
+            } else {
+                console.log("ERROR: File was not set to input");
+            }
+        } else {
+            console.log("DEBUG: File input not found!");
+        }
+        
+        // Show success message
+        const successMsg = document.createElement('div');
+        successMsg.className = 'alert alert-success mt-2';
+        successMsg.innerHTML = '<i class="fas fa-check-circle me-2"></i>Photo captured successfully! You can now submit the form.';
+        
+        // Insert success message
+        const cameraSection = document.getElementById('cameraSection');
+        cameraSection.appendChild(successMsg);
+        
+        // Remove success message after 3 seconds
+        setTimeout(() => {
+            if (successMsg.parentNode) {
+                successMsg.parentNode.removeChild(successMsg);
+            }
+        }, 3000);
+        
+        // Stop camera and switch back to file upload
+        stopCamera();
+        showFileUpload();
+    } else {
+        console.log("ERROR: No captured image data available");
+    }
+}
+
+// Clean up camera when page unloads
+window.addEventListener('beforeunload', function() {
+    if (cameraOn) {
+        stopCamera();
+    }
+});
+
+// Add form submission debugging
+document.querySelector('form').addEventListener('submit', function(e) {
+    console.log("DEBUG: Form submitting...");
+    const fileInput = document.getElementById('profile_photo');
+    console.log("DEBUG: File input:", fileInput);
+    console.log("DEBUG: File input files:", fileInput.files);
+    console.log("DEBUG: File input files length:", fileInput.files.length);
+    
+    if (fileInput.files.length > 0) {
+        console.log("SUCCESS: File will be submitted");
+        console.log("File name:", fileInput.files[0].name);
+        console.log("File size:", fileInput.files[0].size);
+        console.log("File type:", fileInput.files[0].type);
+    } else {
+        console.log("WARNING: No file to submit");
+    }
+});
+</script>
+{% endblock %}

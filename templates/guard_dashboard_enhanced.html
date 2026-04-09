@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Guard Dashboard - Smart Gate Pass System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex align-items-center">
+                <!-- Profile Photo -->
+                <div class="me-3">
+                    {% if security_guard.profile_photo %}
+                        <img src="{{ security_guard.profile_photo.url }}" alt="Profile Photo" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid #007bff;">
+                    {% else %}
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; background-color: #f8f9fa; border: 2px solid #dee2e6;">
+                            <i class="fas fa-user fa-2x text-muted"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Welcome Message -->
+                <div>
+                    <h1 class="display-5 mb-1">Welcome, {{ security_guard.user.get_full_name }}!</h1>
+                    <p class="text-muted mb-0">Employee ID: {{ security_guard.employee_id|default:'N/A' }} | Shift: {{ security_guard.get_shift_display|default:'N/A' }}</p>
+                    <small class="text-muted">
+                        <a href="{% url 'accounts:edit_profile' %}" class="btn btn-sm btn-outline-secondary mt-2">
+                            <i class="fas fa-edit me-1"></i>Edit Profile
+                        </a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Section for Guard Dashboard -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card-custom p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">🔍 Filter Visitors</h5>
+                    <div class="text-muted">
+                        <small>{{ filter_options.filter_description|default:"Today's visitors" }}</small>
+                    </div>
+                </div>
+                
+                <form method="GET" class="g-3">
+                    <div class="row align-items-end">
+                        <!-- Search Box -->
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" name="search" id="search" class="form-control" 
+                                   placeholder="Search visitors..." 
+                                   value="{{ filter_options.search_query|default:'' }}">
+                            <small class="text-muted">Name, phone, purpose</small>
+                        </div>
+                        
+                        <!-- Status Filter -->
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">All Status</option>
+                                {% for status_value, status_label in filter_options.status_choices %}
+                                <option value="{{ status_value }}" {% if filter_options.status_filter == status_value %}selected{% endif %}>
+                                    {{ status_label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Date Filter -->
+                        <div class="col-md-2">
+                            <label for="date" class="form-label">Date</label>
+                            <input type="date" name="date" id="date" class="form-control" 
+                                   value="{{ filter_options.date_filter|default:'' }}">
+                        </div>
+                        
+                        <!-- Resident Filter -->
+                        <div class="col-md-3">
+                            <label for="resident" class="form-label">Resident</label>
+                            <select name="resident" id="resident" class="form-select">
+                                <option value="all">All Residents</option>
+                                {% for resident in filter_options.residents %}
+                                <option value="{{ resident.id }}" {% if filter_options.resident_filter == resident.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ resident.user.get_full_name }} ({{ resident.flat_number }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="col-md-2">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary-custom btn-sm">
+                                    <i class="fas fa-search"></i> Filter
+                                </button>
+                                <a href="{% url 'visitors:visitor_dashboard' %}" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-times"></i> Clear
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card-custom p-4">
+                <h5 class="card-title">📋 Today's Visitors</h5>
+                <h2 class="display-4 mb-0">{{ today_count }}</h2>
+                {% if filter_options.search_query or filter_options.status_filter or filter_options.resident_filter %}
+                    <small class="text-muted">Filtered results</small>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card-custom p-4">
+                <h5 class="card-title">⏳ Pending Visitors</h5>
+                <h2 class="display-4 mb-0">{{ pending_count }}</h2>
+                {% if filter_options.search_query or filter_options.resident_filter %}
+                    <small class="text-muted">Filtered results</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <a href="{% url 'visitors:register_visitor' %}" class="btn btn-primary-custom btn-lg">
+                + Register New Visitor
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card-custom p-4">
+                <h3 class="mb-4">Today's Visitors</h3>
+                
+                {% if today_visitors %}
+                    <div class="table-responsive">
+                        <table class="table table-custom table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Visitor Name</th>
+                                    <th>Resident</th>
+                                    <th>Purpose</th>
+                                    <th>Entry Time</th>
+                                    <th>Duration</th>
+                                    <th>Exit Time</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in today_visitors %}
+                                    {% with visitor=item.visitor history=item.history %}
+                                    <tr>
+                                        <td><strong>{{ visitor.visitor_name }}</strong></td>
+                                        <td>{{ visitor.resident.user.get_full_name }} ({{ visitor.resident.flat_number }})</td>
+                                        <td>{{ visitor.purpose }}</td>
+                                        <td>{{ visitor.entry_time|date:"H:i:s" }}</td>
+                                        <td>
+                                            {% if history %}
+                                                {{ history.get_duration_display }}
+                                            {% elif visitor.exit_time and visitor.entry_time %}
+                                                {% with duration=visitor_data.visitor.exit_time|timeuntil:visitor_data.visitor.entry_time %}
+                                                    {{ duration }}
+                                                {% endwith %}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if visitor.exit_time %}
+                                                {{ visitor.exit_time|date:"H:i:s" }}
+                                            {% elif history %}
+                                                {% if history.status == 'completed' %}
+                                                    {{ history.exit_time|date:"H:i:s" }}
+                                                {% elif history.status == 'in_process' %}
+                                                    <span class="badge bg-info">In Process</span>
+                                                {% elif history.status == 'rejected' %}
+                                                    <span class="badge bg-danger">Cancelled</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Pending OTP</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-warning">Pending OTP</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if history %}
+                                                {% if history.status == 'in_process' or history.status == 'approved' %}
+                                                    {% if not visitor.exit_time %}
+                                                        <a href="{% url 'visitors:mark_exit' visitor.id %}" class="btn btn-sm btn-danger">Mark Exit</a>
+                                                    {% else %}
+                                                        <span class="badge bg-success">Completed</span>
+                                                    {% endif %}
+                                                {% elif history.status == 'completed' %}
+                                                    <span class="badge bg-success">Completed</span>
+                                                {% elif history.status == 'rejected' %}
+                                                    <span class="badge bg-danger">Cancelled</span>
+                                                {% elif history.status == 'pending' %}
+                                                    <span class="badge bg-warning">Pending OTP</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ history.status|title }}</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-warning">Pending OTP</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endwith %}
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No visitors registered today</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Visitors Found</h5>
+                        <p class="text-muted">
+                            {% if filter_options.search_query or filter_options.status_filter or filter_options.resident_filter %}
+                                No visitors match the current filters for {{ filter_options.date_filter|default:"today" }}.
+                            {% else %}
+                                No visitors found for {{ filter_options.date_filter|default:"today" }}.
+                            {% endif %}
+                        </p>
+                        {% if filter_options.search_query or filter_options.status_filter or filter_options.resident_filter %}
+                            <a href="{% url 'visitors:visitor_dashboard' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-times"></i> Clear Filters
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

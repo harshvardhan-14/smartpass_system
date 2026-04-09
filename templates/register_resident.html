@@ -1,0 +1,363 @@
+{% extends 'base.html' %}
+
+{% block title %}Register Resident - Smart Gate Pass System{% endblock %}
+
+{% block content %}
+<div class="container-custom">
+    <div class="card-custom p-4 p-md-5 narrow-card narrow-card--md">
+        <h2 class="text-center mb-4">Register as Resident</h2>
+        
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="first_name" class="form-label">First Name</label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.first_name.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="last_name" class="form-label">Last Name</label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.last_name.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.username.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.password.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                {{ form.confirm_password }}
+                {% if form.confirm_password.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.confirm_password.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="flat_number" class="form-label">Flat Number</label>
+                {{ form.flat_number }}
+                {% if form.flat_number.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.flat_number.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="phone_number" class="form-label">Phone Number</label>
+                {{ form.phone_number }}
+                {% if form.phone_number.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.phone_number.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="building_name" class="form-label">Building Name</label>
+                {{ form.building_name }}
+                {% if form.building_name.errors %}
+                    <div class="alert alert-danger mt-1">{{ form.building_name.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Profile Photo Section -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">Profile Photo</label>
+                
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs mb-3" id="residentPhotoTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="resident-upload-tab" data-bs-toggle="tab" data-bs-target="#resident-upload-pane" type="button" role="tab">
+                            <i class="fas fa-upload me-2"></i>Upload Photo
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="resident-camera-tab" data-bs-toggle="tab" data-bs-target="#resident-camera-pane" type="button" role="tab">
+                            <i class="fas fa-camera me-2"></i>Take Photo
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Tab Content -->
+                <div class="tab-content" id="residentPhotoTabContent">
+                    <!-- Upload Tab -->
+                    <div class="tab-pane fade show active" id="resident-upload-pane" role="tabpanel">
+                        <div class="mb-3">
+                            {{ form.profile_photo }}
+                            <small class="form-text text-muted">Optional - Upload your profile photo (Max size: 5MB. Formats: JPEG, PNG)</small>
+                            {% if form.profile_photo.errors %}
+                                <div class="alert alert-danger mt-2">{{ form.profile_photo.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Camera Tab -->
+                    <div class="tab-pane fade" id="resident-camera-pane" role="tabpanel">
+                        <div class="mb-3">
+                            <div class="d-flex gap-2 mb-3">
+                                <button type="button" class="btn btn-success" onclick="startResidentCamera()">
+                                    <i class="fas fa-video me-2"></i>Start Camera
+                                </button>
+                                <button type="button" class="btn btn-danger" onclick="stopResidentCamera()">
+                                    <i class="fas fa-stop me-2"></i>Stop Camera
+                                </button>
+                            </div>
+                            
+                            <!-- Camera Preview -->
+                            <div id="residentCameraContainer" class="text-center">
+                                <video id="residentCamera" width="320" height="240" autoplay playsinline class="border rounded mx-auto" style="display: none;"></video>
+                                <canvas id="residentCanvas" width="320" height="240" style="display: none;"></canvas>
+                                
+                                <div id="residentCameraControls" style="display: none;" class="mt-3">
+                                    <button type="button" class="btn btn-primary me-2" onclick="captureResidentPhoto()">
+                                        <i class="fas fa-camera me-2"></i>Capture Photo
+                                    </button>
+                                    <button type="button" class="btn btn-warning me-2" onclick="retakeResidentPhoto()">
+                                        <i class="fas fa-redo me-2"></i>Retake
+                                    </button>
+                                </div>
+                                
+                                <div id="residentCapturedPreview" class="mt-3" style="display: none;">
+                                    <img id="residentPreviewImage" class="border rounded mx-auto" style="max-width: 200px; max-height: 200px;">
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-success btn-sm" onclick="acceptResidentPhoto()">
+                                            <i class="fas fa-check me-2"></i>Use This Photo
+                                        </button>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="retakeResidentPhoto()">
+                                            <i class="fas fa-redo me-2"></i>Take Another
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="residentCameraError" class="alert alert-warning" style="display: none;">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <span id="residentErrorMessage"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary-custom w-100 btn-lg">
+                Register
+            </button>
+        </form>
+        
+        <hr class="my-4">
+        
+        <p class="text-center">Already have an account? <a href="{% url 'accounts:login' %}">Login here</a></p>
+    </div>
+</div>
+
+<!-- Resident Camera JavaScript -->
+<script>
+let residentStream = null;
+let residentCameraOn = false;
+let residentCapturedImageData = null;
+
+function startResidentCamera() {
+    const video = document.getElementById('residentCamera');
+    const cameraError = document.getElementById('residentCameraError');
+    const errorMessage = document.getElementById('residentErrorMessage');
+    
+    // Hide error message
+    cameraError.style.display = 'none';
+    
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: 'user'
+            },
+            audio: false 
+        })
+        .then(function(s) {
+            residentStream = s;
+            video.srcObject = residentStream;
+            video.style.display = 'block';
+            document.getElementById('residentCameraControls').style.display = 'block';
+            residentCameraOn = true;
+            
+            // Hide captured preview if showing
+            document.getElementById('residentCapturedPreview').style.display = 'none';
+        })
+        .catch(function(err) {
+            console.error("Camera access denied: ", err);
+            let errorMsg = "Camera access denied. ";
+            
+            if (err.name === 'NotAllowedError') {
+                errorMsg += "Please allow camera access in your browser settings and try again.";
+            } else if (err.name === 'NotFoundError') {
+                errorMsg += "No camera found. Please connect a camera and try again.";
+            } else if (err.name === 'NotReadableError') {
+                errorMsg += "Camera is already in use by another application.";
+            } else {
+                errorMsg += "Please check your camera permissions and try again.";
+            }
+            
+            errorMessage.textContent = errorMsg;
+            cameraError.style.display = 'block';
+        });
+    } else {
+        errorMessage.textContent = "Camera not supported in this browser. Please use a modern browser like Chrome, Firefox, or Safari.";
+        cameraError.style.display = 'block';
+    }
+}
+
+function stopResidentCamera() {
+    const video = document.getElementById('residentCamera');
+    const cameraError = document.getElementById('residentCameraError');
+    
+    if (residentStream) {
+        residentStream.getTracks().forEach(track => track.stop());
+        residentStream = null;
+    }
+    
+    video.srcObject = null;
+    video.style.display = 'none';
+    document.getElementById('residentCameraControls').style.display = 'none';
+    document.getElementById('residentCapturedPreview').style.display = 'none';
+    cameraError.style.display = 'none';
+    residentCameraOn = false;
+}
+
+function captureResidentPhoto() {
+    const video = document.getElementById('residentCamera');
+    const canvas = document.getElementById('residentCanvas');
+    const context = canvas.getContext('2d');
+    
+    if (residentCameraOn && video.readyState === video.HAVE_ENOUGH_DATA) {
+        // Set canvas dimensions to match video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Draw video frame to canvas
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to blob and store
+        canvas.toBlob(function(blob) {
+            residentCapturedImageData = blob;
+            
+            // Show preview
+            const imageUrl = canvas.toDataURL('image/jpeg', 0.8);
+            const previewImage = document.getElementById('residentPreviewImage');
+            previewImage.src = imageUrl;
+            
+            // Show captured preview, hide video
+            video.style.display = 'none';
+            document.getElementById('residentCameraControls').style.display = 'none';
+            document.getElementById('residentCapturedPreview').style.display = 'block';
+        }, 'image/jpeg', 0.8);
+    } else {
+        alert("Camera not ready. Please wait a moment and try again.");
+    }
+}
+
+function retakeResidentPhoto() {
+    // Show video again, hide preview
+    const video = document.getElementById('residentCamera');
+    video.style.display = 'block';
+    document.getElementById('residentCameraControls').style.display = 'block';
+    document.getElementById('residentCapturedPreview').style.display = 'none';
+    residentCapturedImageData = null;
+}
+
+function acceptResidentPhoto() {
+    if (residentCapturedImageData) {
+        // Create a file from the captured image data
+        const file = new File([residentCapturedImageData], "resident_photo.jpg", { 
+            type: "image/jpeg",
+            lastModified: Date.now()
+        });
+        
+        // Create a DataTransfer object to set the file
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        
+        // Set the file to the profile photo input
+        const fileInput = document.getElementById('profile_photo');
+        fileInput.files = dataTransfer.files;
+        
+        // Update the file input display to show the captured photo
+        const fileInputContainer = fileInput.parentElement;
+        const fileInfo = document.createElement('small');
+        fileInfo.className = 'text-success d-block mt-1';
+        fileInfo.innerHTML = '<i class="fas fa-check-circle me-1"></i>Photo captured from camera: resident_photo.jpg';
+        
+        // Remove any existing file info
+        const existingInfo = fileInputContainer.querySelector('small.text-success');
+        if (existingInfo) {
+            existingInfo.remove();
+        }
+        
+        fileInputContainer.appendChild(fileInfo);
+        
+        // Show success message
+        const successMsg = document.createElement('div');
+        successMsg.className = 'alert alert-success mt-2';
+        successMsg.innerHTML = '<i class="fas fa-check-circle me-2"></i>Profile photo captured successfully! You can now submit the form.';
+        
+        // Insert success message after the captured preview
+        const previewContainer = document.getElementById('residentCapturedPreview');
+        previewContainer.parentNode.insertBefore(successMsg, previewContainer.nextSibling);
+        
+        // Remove success message after 3 seconds
+        setTimeout(() => {
+            if (successMsg.parentNode) {
+                successMsg.parentNode.removeChild(successMsg);
+            }
+        }, 3000);
+        
+        // Stop camera
+        stopResidentCamera();
+        
+        // Switch back to upload tab to show the selected file
+        const uploadTab = new bootstrap.Tab(document.getElementById('resident-upload-tab'));
+        uploadTab.show();
+    }
+}
+
+// Clean up camera when page unloads
+window.addEventListener('beforeunload', function() {
+    if (residentCameraOn) {
+        stopResidentCamera();
+    }
+});
+
+// Also clean up when switching tabs
+document.getElementById('resident-camera-tab').addEventListener('shown.bs.tab', function() {
+    // Camera tab is now active
+});
+
+document.getElementById('resident-upload-tab').addEventListener('shown.bs.tab', function() {
+    // Upload tab is now active, stop camera if running
+    if (residentCameraOn) {
+        stopResidentCamera();
+    }
+});
+</script>
+{% endblock %}

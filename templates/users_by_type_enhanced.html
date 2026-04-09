@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ user_type_display }} - User Management{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard-unified.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 users-by-type-page">
+    <!-- Admin Panel Header -->
+    <div class="admin-panel">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{% url 'dashboard:user_groups' %}" class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left"></i> Back to Groups
+                    </a>
+                    <div>
+                        <h1 class="mb-0">👥 {{ user_type_display }}</h1>
+                        <p class="mb-0 mt-1 opacity-75">Manage and monitor all {{ user_type_display|lower }} in the system</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="d-flex gap-2 justify-content-md-end">
+                    <div class="stats-card d-inline-block">
+                        <h3 class="mb-0">{{ total_count }}</h3>
+                        <small class="text-muted">Total</small>
+                    </div>
+                    <div class="stats-card d-inline-block">
+                        <h3 class="mb-0">{{ active_count }}</h3>
+                        <small class="text-muted">Active</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Section -->
+    <div class="filter-card">
+        <h5><i class="fas fa-filter"></i> Filter {{ user_type_display|slice':0:-1' }}</h5>
+        
+        <form method="GET" class="mb-4">
+            <div class="row g-3">
+                <!-- Search Box -->
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" name="search" id="search" class="form-control" 
+                           placeholder="Search users..." 
+                           value="{{ search_query|default:'' }}">
+                    <small class="text-muted">Search username, name, email</small>
+                </div>
+                
+                <!-- Status Filter -->
+                <div class="col-md-2">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Users</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive Users</option>
+                        <option value="profile_exists" {% if status_filter == 'profile_exists' %}selected{% endif %}>Has Profile</option>
+                        <option value="profile_deleted" {% if status_filter == 'profile_deleted' %}selected{% endif %}>Profile Deleted</option>
+                    </select>
+                </div>
+                
+                <!-- Building Filter (Only for Residents) -->
+                {% if user_type == 'resident' %}
+                <div class="col-md-2">
+                    <label for="building" class="form-label">Building</label>
+                    <select name="building" id="building" class="form-select">
+                        <option value="">All Buildings</option>
+                        {% for building in building_options %}
+                        <option value="{{ building }}" {% if building_filter == building %}selected{% endif %}>
+                            {{ building }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                
+                <!-- Date Filter -->
+                <div class="col-md-2">
+                    <label for="date" class="form-label">Join Date</label>
+                    <input type="date" name="date" id="date" class="form-control" 
+                           value="{{ date_filter|default:'' }}">
+                </div>
+                
+                <!-- Sort By -->
+                <div class="col-md-2">
+                    <label for="sort_by" class="form-label">Sort By</label>
+                    <select name="sort_by" id="sort_by" class="form-select">
+                        <option value="date_joined" {% if sort_by == 'date_joined' %}selected{% endif %}>Date Joined</option>
+                        <option value="username" {% if sort_by == 'username' %}selected{% endif %}>Username</option>
+                        <option value="first_name" {% if sort_by == 'first_name' %}selected{% endif %}>First Name</option>
+                        <option value="last_name" {% if sort_by == 'last_name' %}selected{% endif %}>Last Name</option>
+                        <option value="email" {% if sort_by == 'email' %}selected{% endif %}>Email</option>
+                        <option value="last_login" {% if sort_by == 'last_login' %}selected{% endif %}>Last Login</option>
+                    </select>
+                </div>
+                
+                <!-- Sort Order -->
+                <div class="col-md-1">
+                    <label for="order" class="form-label">Order</label>
+                    <select name="order" id="order" class="form-select">
+                        <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>↓</option>
+                        <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>↑</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Filter Actions -->
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="filter-actions d-flex gap-2">
+                        <button type="submit" class="btn btn-primary-custom">
+                            <i class="fas fa-search"></i> Apply Filters
+                        </button>
+                        <a href="{% url 'dashboard:users_by_type' user_type %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Clear Filters
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Filter Description -->
+        {% if filter_description and filter_description != "No filters applied" %}
+        <div class="alert alert-info d-flex align-items-center mt-3" role="alert">
+            <i class="fas fa-filter me-2"></i>
+            <div>
+                <strong>Current Filters:</strong> {{ filter_description }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Data Table Section -->
+    <div class="data-table-panel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">📊 {{ user_type_display }} Records</h5>
+            <div class="text-muted">
+                <small>Showing {{ users_with_profiles|length }} of {{ total_count }} {{ user_type_display|lower }}</small>
+            </div>
+        </div>
+                
+        <!-- Users Table -->
+        {% if users_with_profiles %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user"></i> User</th>
+                            <th><i class="fas fa-envelope"></i> Contact</th>
+                            <th><i class="fas fa-check-circle"></i> Status</th>
+                            <th><i class="fas fa-id-card"></i> Profile</th>
+                            <th><i class="fas fa-calendar"></i> Join Date</th>
+                            <th><i class="fas fa-clock"></i> Last Login</th>
+                            {% if user_type == 'resident' %}
+                                <th><i class="fas fa-building"></i> Building</th>
+                                <th><i class="fas fa-home"></i> Flat</th>
+                                <th><i class="fas fa-phone"></i> Phone</th>
+                            {% elif user_type == 'security' %}
+                                <th><i class="fas fa-id-badge"></i> Employee ID</th>
+                                <th><i class="fas fa-phone"></i> Phone</th>
+                            {% elif user_type == 'admin' %}
+                                <th><i class="fas fa-briefcase"></i> Department</th>
+                                <th><i class="fas fa-user-tag"></i> Role</th>
+                            {% endif %}
+                            <th><i class="fas fa-cogs"></i> Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user_data in users_with_profiles %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2">
+                                            {% if user_data.user.is_active %}
+                                                <span class="badge badge-success">●</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">●</span>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <strong>{{ user_data.user.get_full_name|default:user_data.user.username }}</strong><br>
+                                            <small class="text-muted">@{{ user_data.user.username }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {{ user_data.user.email|default:'-' }}<br>
+                                    {% if user_data.profile %}
+                                        {% if user_type == 'resident' %}
+                                            {{ user_data.profile.phone_number|default:'-' }}
+                                        {% elif user_type == 'security' %}
+                                            {{ user_data.profile.phone_number|default:'-' }}
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user_data.user.is_active %}
+                                        <span class="badge badge-success">Active</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">Inactive</span>
+                                    {% endif %}
+                                    
+                                    {% if user_data.profile_deleted %}
+                                        <span class="badge badge-warning">Profile Deleted</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user_data.profile %}
+                                        <span class="badge badge-primary">Complete</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">Missing</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ user_data.user.date_joined|date:"M d, Y" }}<br>
+                                    <small class="text-muted">{{ user_data.user.date_joined|date:"H:i" }}</small>
+                                </td>
+                                <td>
+                                    {% if user_data.user.last_login %}
+                                        {{ user_data.user.last_login|date:"M d, Y" }}<br>
+                                        <small class="text-muted">{{ user_data.user.last_login|date:"H:i" }}</small>
+                                    {% else %}
+                                        <span class="text-muted">Never</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <!-- Profile-specific columns -->
+                                {% if user_type == 'resident' %}
+                                    <td>
+                                        {% if user_data.profile %}
+                                            {{ user_data.profile.building_name|default:'Building A' }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user_data.profile %}
+                                            {{ user_data.profile.flat_number }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user_data.profile %}
+                                            {{ user_data.profile.phone_number|default:'-' }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                {% elif user_type == 'security' %}
+                                    <td>
+                                        {% if user_data.profile %}
+                                            {{ user_data.profile.employee_id|default:'-' }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user_data.profile %}
+                                            {{ user_data.profile.phone_number|default:'-' }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                {% elif user_type == 'admin' %}
+                                    <td>
+                                        {% if user_data.profile %}
+                                            {{ user_data.profile.department|default:'-' }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user_data.profile %}
+                                            {{ user_data.profile.role|default:'-' }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                {% endif %}
+                                
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="#" class="btn btn-outline-primary" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="#" class="btn btn-outline-secondary" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if user_data.user.is_active %}
+                                            <a href="#" class="btn btn-outline-warning" title="Deactivate">
+                                                <i class="fas fa-pause"></i>
+                                            </a>
+                                        {% else %}
+                                            <a href="#" class="btn btn-outline-success" title="Activate">
+                                                <i class="fas fa-play"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Results Summary -->
+            <div class="mt-3 text-muted">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small>
+                        {% if filter_description and filter_description != "No filters applied" %}
+                            {{ filter_description }}
+                        {% else %}
+                            Showing all {{ user_type_display|lower }}
+                        {% endif %}
+                    </small>
+                    <small>
+                        <strong>{{ users_with_profiles|length }}</strong> of <strong>{{ total_count }}</strong> total
+                    </small>
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-users"></i>
+                <h5 class="text-muted">No {{ user_type_display|slice':0:-1' }} Found</h5>
+                <p class="text-muted">
+                    {% if filter_description and filter_description != "No filters applied" %}
+                        No {{ user_type_display|lower }} match the current filters. Try adjusting your search criteria.
+                    {% else %}
+                        No {{ user_type_display|lower }} have been created yet.
+                    {% endif %}
+                </p>
+                {% if filter_description and filter_description != "No filters applied" %}
+                    <a href="{% url 'dashboard:users_by_type' user_type %}" class="btn btn-outline-primary">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

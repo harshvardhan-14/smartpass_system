@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reports - Smart Gate Pass System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard-unified.css' %}">
+<link rel="stylesheet" href="{% static 'css/pages/reports-hub.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 page-reports">
+    <!-- Report period (visitor metrics) -->
+    <div class="filter-card page-reports-filter mb-4">
+        <h5><i class="fas fa-sliders-h"></i> Report period</h5>
+        <form method="get" action="{% url 'dashboard:reports' %}">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4 col-lg-3">
+                    <label for="rep_start_date" class="form-label">Start date</label>
+                    <input type="date" name="start_date" id="rep_start_date" class="form-control"
+                           value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <label for="rep_end_date" class="form-label">End date</label>
+                    <input type="date" name="end_date" id="rep_end_date" class="form-control"
+                           value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-12 col-lg-6">
+                    <div class="filter-actions d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary-custom">
+                            <i class="fas fa-search me-1"></i> Apply
+                        </button>
+                        <a href="{% url 'dashboard:reports' %}" class="btn btn-secondary">Reset</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <p class="page-reports-filter-hint mb-2">
+            <strong>Admin &amp; system activity</strong> is only on the
+            <a href="{% url 'dashboard:admin_dashboard' %}" class="text-reset fw-bold" style="color: var(--color-primary-light) !important;">Admin dashboard</a>
+            (<code>/dashboard/admin/</code>). Use <em>Activity reports</em> below for the full paginated log.
+        </p>
+        <p class="page-reports-trend mb-0">
+            Visitors in range: <strong>{{ range_visitor_stats.total|default:0 }}</strong>
+            {% if range_visitor_stats.unique_visitors %}· Unique names: <strong>{{ range_visitor_stats.unique_visitors }}</strong>{% endif %}
+        </p>
+    </div>
+
+    <!-- Header -->
+    <div class="admin-panel mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left"></i> Back to Admin
+                    </a>
+                    <div>
+                        <h1 class="mb-0">System reports</h1>
+                        <p class="mb-0 mt-1 opacity-75">Analytics hub · {{ start_date|date:"M j, Y" }} — {{ end_date|date:"M j, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="stats-card d-inline-block text-center px-4 py-3">
+                    <div class="icon">📈</div>
+                    <h3 class="mb-0">{{ total_reports }}</h3>
+                    <h5>Total data points</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-6 col-lg-3 mb-3">
+            <div class="stats-card h-100">
+                <div class="icon">👥</div>
+                <h3>{{ visitor_stats.total }}</h3>
+                <h5>Total visitors</h5>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3 mb-3">
+            <div class="stats-card h-100">
+                <div class="icon">📅</div>
+                <h3>{{ visitor_stats.today }}</h3>
+                <h5>Today</h5>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3 mb-3">
+            <div class="stats-card h-100">
+                <div class="icon">🔔</div>
+                <h3>{{ activity_stats.total }}</h3>
+                <h5>System activities</h5>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3 mb-3">
+            <div class="stats-card h-100">
+                <div class="icon">✅</div>
+                <h3>{{ gate_pass_stats.active }}</h3>
+                <h5>Active gate passes</h5>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="quick-actions-card page-reports-quick">
+                <h5><i class="fas fa-bolt"></i> Quick actions</h5>
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'dashboard:visitor_reports' %}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-users"></i> Visitor reports
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'dashboard:activity_reports' %}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-chart-line"></i> Activity reports
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'audit:audit_logs' %}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-shield-alt"></i> Audit logs
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="{% url 'dashboard:export_reports' %}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-download"></i> Export data
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="reports-card h-100">
+                <h5><i class="fas fa-chart-bar"></i> Recent reports</h5>
+
+                <div class="report-item">
+                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                        <div class="flex-grow-1">
+                            <h6>
+                                <i class="fas fa-users text-primary"></i>
+                                Visitor summary
+                            </h6>
+                            <p class="mb-1">Entry/exit overview and gate pass usage</p>
+                            <small class="text-muted">Updated {{ visitor_stats.last_updated|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <div>
+                            <a href="{% url 'dashboard:visitor_reports' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-item">
+                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                        <div class="flex-grow-1">
+                            <h6>
+                                <i class="fas fa-chart-line text-info"></i>
+                                System activity
+                            </h6>
+                            <p class="mb-1">Audit trail of user and system actions</p>
+                            <small class="text-muted">Updated {{ activity_stats.last_updated|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <div>
+                            <a href="{% url 'dashboard:activity_reports' %}" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-item">
+                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                        <div class="flex-grow-1">
+                            <h6>
+                                <i class="fas fa-shield-alt text-secondary"></i>
+                                Security audit
+                            </h6>
+                            <p class="mb-1">Security monitoring with export options</p>
+                            <small class="text-muted">Updated {{ audit_stats.last_updated|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <div>
+                            <a href="{% url 'audit:audit_logs' %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-item mb-0">
+                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                        <div class="flex-grow-1">
+                            <h6>
+                                <i class="fas fa-id-card text-success"></i>
+                                Gate pass report
+                            </h6>
+                            <p class="mb-1">Issuance, usage, and expiration patterns</p>
+                            <small class="text-muted">Updated {{ gate_pass_stats.last_updated|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <div>
+                            <a href="{% url 'dashboard:gate_pass_reports' %}" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="reports-card page-reports-info h-100">
+                <h5><i class="fas fa-info-circle"></i> Report information</h5>
+
+                <p class="page-reports-info-section-title">Available exports</p>
+                <div class="page-reports-info-tiles">
+                    <div class="page-reports-info-tile">
+                        <i class="fas fa-users text-primary"></i>
+                        <div>
+                            <strong>Visitor reports</strong>
+                            <span>Entry/exit tracking and host linkage</span>
+                        </div>
+                    </div>
+                    <div class="page-reports-info-tile">
+                        <i class="fas fa-chart-line text-info"></i>
+                        <div>
+                            <strong>Activity reports</strong>
+                            <span>Who did what, with timestamps and IP</span>
+                        </div>
+                    </div>
+                    <div class="page-reports-info-tile">
+                        <i class="fas fa-shield-alt text-secondary"></i>
+                        <div>
+                            <strong>Audit logs</strong>
+                            <span>Security-focused event stream</span>
+                        </div>
+                    </div>
+                    <div class="page-reports-info-tile">
+                        <i class="fas fa-id-card text-success"></i>
+                        <div>
+                            <strong>Gate pass</strong>
+                            <span>Pass lifecycle and validity</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="page-reports-info-section-title">Capabilities</p>
+                <ul class="page-reports-info-features">
+                    <li><i class="fas fa-filter"></i> Date range on this hub; activity filters on Admin dashboard</li>
+                    <li><i class="fas fa-download"></i> CSV export where enabled</li>
+                    <li><i class="fas fa-calendar"></i> Calendar-aligned reporting</li>
+                    <li><i class="fas fa-search"></i> Drill-down from summary cards</li>
+                </ul>
+
+                <div class="text-center">
+                    <a href="{% url 'dashboard:export_reports' %}" class="btn btn-success w-100">
+                        <i class="fas fa-download"></i> Export all reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

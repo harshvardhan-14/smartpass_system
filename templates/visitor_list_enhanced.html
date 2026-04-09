@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block title %}All Visitors - Smart Gate Pass System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card-custom p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h1 class="mb-0">📋 All Visitors</h1>
+                    <div>
+                        <span class="badge bg-info">{{ total_visitors }} Total Visitors</span>
+                    </div>
+                </div>
+                
+                <!-- Filter Description -->
+                <div class="alert alert-info d-flex align-items-center" role="alert">
+                    <i class="fas fa-filter me-2"></i>
+                    <div>
+                        <strong>Current Filters:</strong> {{ filter_description|default:"No filters applied" }}
+                    </div>
+                </div>
+                
+                <!-- Comprehensive Search and Filter -->
+                <form method="GET" class="mb-4">
+                    <div class="row g-3">
+                        <!-- Search Box -->
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" name="search" id="search" class="form-control" 
+                                   placeholder="Search by name, phone, purpose, resident..." 
+                                   value="{{ search_query|default:'' }}">
+                            <small class="text-muted">Search visitor name, phone, purpose, resident name, or flat number</small>
+                        </div>
+                        
+                        <!-- Status Filter -->
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">All Status</option>
+                                {% for status_value, status_label in status_choices %}
+                                <option value="{{ status_value }}" {% if status_filter == status_value %}selected{% endif %}>
+                                    {{ status_label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Date Filter -->
+                        <div class="col-md-2">
+                            <label for="date" class="form-label">Date</label>
+                            <input type="date" name="date" id="date" class="form-control" 
+                                   value="{{ date_filter|default:'' }}">
+                        </div>
+                        
+                        <!-- Guard Filter -->
+                        <div class="col-md-2">
+                            <label for="guard" class="form-label">Security Guard</label>
+                            <select name="guard" id="guard" class="form-select">
+                                <option value="all">All Guards</option>
+                                {% for guard in guards %}
+                                <option value="{{ guard.id }}" {% if guard_filter == guard.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ guard.user.get_full_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Resident Filter -->
+                        <div class="col-md-2">
+                            <label for="resident" class="form-label">Resident</label>
+                            <select name="resident" id="resident" class="form-select">
+                                <option value="all">All Residents</option>
+                                {% for resident in residents %}
+                                <option value="{{ resident.id }}" {% if resident_filter == resident.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ resident.user.get_full_name }} ({{ resident.flat_number }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Filter Actions -->
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary-custom">
+                                    <i class="fas fa-search"></i> Apply Filters
+                                </button>
+                                <a href="{% url 'visitors:visitor_list' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Clear Filters
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- Visitors Table -->
+                {% if all_visitors %}
+                    <div class="table-responsive">
+                        <table class="table table-custom table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Photo</th>
+                                    <th>Visitor Name</th>
+                                    <th>Phone</th>
+                                    <th>Purpose</th>
+                                    <th>Resident</th>
+                                    <th>Entry Date</th>
+                                    <th>Entry Time</th>
+                                    <th>Exit Time</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                    <th>Registered By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in all_visitors %}
+                                    {% with visitor=item.visitor history=item.history %}
+                                    <tr>
+                                        <td><strong>{{ visitor.id }}</strong></td>
+                                        <td>
+                                            {% if visitor.visitor_photo %}
+                                                <img src="{{ visitor.visitor_photo.url }}" alt="{{ visitor.visitor_name }}" 
+                                                     class="rounded-circle" width="40" height="40">
+                                            {% else %}
+                                                <span class="badge bg-secondary">No Photo</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><strong>{{ visitor.visitor_name }}</strong></td>
+                                        <td>{{ visitor.mobile_number }}</td>
+                                        <td>{{ visitor.purpose }}</td>
+                                        <td>
+                                            {% if visitor.resident %}
+                                                {{ visitor.resident.user.get_full_name }} ({{ visitor.resident.flat_number }})
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ visitor.entry_time|date:"M d, Y" }}</td>
+                                        <td>{{ visitor.entry_time|date:"H:i:s" }}</td>
+                                        <td>
+                                            {% if visitor.exit_time %}
+                                                {{ visitor.exit_time|date:"H:i:s" }}
+                                            {% elif history and history.exit_time %}
+                                                {{ history.exit_time|date:"H:i:s" }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if history and history.duration %}
+                                                {{ history.duration }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if history %}
+                                                {% if history.status == 'completed' %}
+                                                    <span class="badge bg-success">{{ history.status|title }}</span>
+                                                {% elif history.status == 'approved' %}
+                                                    <span class="badge bg-primary">{{ history.status|title }}</span>
+                                                {% elif history.status == 'in_process' %}
+                                                    <span class="badge bg-info">{{ history.status|title }}</span>
+                                                {% elif history.status == 'rejected' %}
+                                                    <span class="badge bg-danger">{{ history.status|title }}</span>
+                                                {% elif history.status == 'pending' %}
+                                                    <span class="badge bg-warning">{{ history.status|title }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ history.status|title }}</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-secondary">No History</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if visitor.registered_by %}
+                                                {{ visitor.registered_by.user.get_full_name }}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'visitors:gate_pass_details' visitor.id %}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endwith %}
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="13" class="text-center text-muted">
+                                            <i class="fas fa-search"></i> No visitors found matching your filters
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Results Summary -->
+                    <div class="mt-3 text-muted">
+                        <small>
+                            Showing {{ all_visitors|length }} of {{ total_visitors }} visitors
+                            {% if filter_description and filter_description != "No filters applied" %}
+                                | {{ filter_description }}
+                            {% endif %}
+                        </small>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Visitors Found</h5>
+                        <p class="text-muted">
+                            {% if filter_description and filter_description != "No filters applied" %}
+                                No visitors match the current filters. Try adjusting your search criteria.
+                            {% else %}
+                                No visitors have been registered yet.
+                            {% endif %}
+                        </p>
+                        {% if filter_description and filter_description != "No filters applied" %}
+                            <a href="{% url 'visitors:visitor_list' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-times"></i> Clear Filters
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

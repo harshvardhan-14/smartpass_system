@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gate Pass Reports - Smart Gate Pass System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard-unified.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Admin Panel Header -->
+    <div class="admin-panel">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{% url 'dashboard:reports' %}" class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left"></i> Back to Reports
+                    </a>
+                    <div>
+                        <h1 class="mb-0">📋 Gate Pass Reports</h1>
+                        <p class="mb-0 mt-1 opacity-75">Monitor and manage gate pass issuance and usage</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="stats-card d-inline-block">
+                    <div class="icon">📋</div>
+                    <h3>{{ total_passes }}</h3>
+                    <h5>Total Passes</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="icon">📋</div>
+                <h3>{{ total_passes }}</h3>
+                <h5>Total Passes</h5>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="icon">✅</div>
+                <h3>{{ active_passes }}</h3>
+                <h5>Active Passes</h5>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="icon">⏰</div>
+                <h3>{{ expired_passes }}</h3>
+                <h5>Expired Passes</h5>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stats-card">
+                <div class="icon">📅</div>
+                <h3>{{ start_date|date:"M d" }} - {{ end_date|date:"M d" }}</h3>
+                <h5>Date Range</h5>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Section -->
+    <div class="filter-card">
+        <h5><i class="fas fa-filter"></i> Filter Gate Passes</h5>
+        
+        <form method="GET" class="mb-4">
+            <div class="row g-3">
+                <!-- Start Date -->
+                <div class="col-md-4">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control" 
+                           value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                
+                <!-- End Date -->
+                <div class="col-md-4">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control" 
+                           value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                
+                <!-- Actions -->
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="filter-actions d-flex gap-2">
+                        <button type="submit" class="btn btn-primary-custom">
+                            <i class="fas fa-search"></i> Filter
+                        </button>
+                        <a href="{% url 'dashboard:gate_pass_reports' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Gate Passes List -->
+    <div class="gate-passes-card">
+        <h5><i class="fas fa-id-card"></i> Gate Pass Records</h5>
+        
+        {% if gate_passes %}
+            {% for gate_pass in gate_passes %}
+                <div class="gate-pass-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6>
+                                <i class="fas fa-id-card text-primary"></i>
+                                Gate Pass #{{ gate_pass.id }}
+                            </h6>
+                            <p class="mb-1">
+                                <strong>Visitor:</strong> {{ gate_pass.visitor.visitor_name }}<br>
+                                <strong>Purpose:</strong> {{ gate_pass.purpose }}
+                            </p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> Issued: {{ gate_pass.issue_time|date:"M d, Y H:i" }} |
+                                <i class="fas fa-calendar-check"></i> Valid Until: {{ gate_pass.valid_until|date:"M d, Y H:i" }} |
+                                <i class="fas fa-user"></i> Issued By: {{ gate_pass.issued_by.username }}
+                            </small>
+                        </div>
+                        <div>
+                            {% if gate_pass.status == 'approved' %}
+                                <span class="badge badge-success">Approved</span>
+                            {% elif gate_pass.status == 'rejected' %}
+                                <span class="badge badge-danger">Rejected</span>
+                            {% elif gate_pass.status == 'pending' %}
+                                <span class="badge badge-warning">Pending</span>
+                            {% elif timezone.now > gate_pass.valid_till %}
+                                <span class="badge badge-secondary">Expired</span>
+                            {% else %}
+                                <span class="badge badge-warning">Unknown</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-id-card"></i>
+                <h5 class="text-muted">No Gate Passes Found</h5>
+                <p class="text-muted">No gate passes found matching your criteria.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

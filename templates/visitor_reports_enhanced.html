@@ -1,0 +1,501 @@
+{% extends 'base.html' %}
+
+{% block title %}Visitor Reports - Smart Gate Pass System{% endblock %}
+
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/pages/visitor-reports.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-visitor-reports">
+<div class="container py-4">
+    <!-- Admin Header -->
+    <div class="admin-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{% url 'dashboard:reports' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Reports
+                    </a>
+                    <div>
+                        <h1 class="mb-0">📊 Visitor Reports</h1>
+                        <p class="subtitle">Comprehensive visitor management and analytics</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="stats-overview">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-value">{{ total_visitors }}</div>
+                            <div class="stat-label">Total Visitors</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📅</div>
+                            <div class="stat-value">{{ start_date|date:"M d" }} - {{ end_date|date:"M d" }}</div>
+                            <div class="stat-label">Date Range</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <div class="filter-header">
+            <h2 class="filter-title">
+                <i class="fas fa-filter"></i> Advanced Filtering
+            </h2>
+            <button onclick="exportReport()" class="export-btn">
+                <i class="fas fa-download"></i> Export CSV
+            </button>
+        </div>
+        
+        <form method="GET" class="mb-4">
+            <div class="filter-grid">
+                <!-- Search Box -->
+                <div class="form-group">
+                    <label for="search" class="form-label">Search Visitors</label>
+                    <input type="text" name="search" id="search" class="form-control" 
+                           placeholder="Search by name, mobile, purpose..." 
+                           value="{{ request.GET.search|default:'' }}">
+                </div>
+                
+                <!-- Date Range -->
+                <div class="form-group">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control" 
+                           value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control" 
+                           value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                
+                <!-- Status Filter -->
+                <div class="form-group">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="in_process" {% if request.GET.status == 'in_process' %}selected{% endif %}>In Process</option>
+                        <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Approved</option>
+                        <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                        <option value="registered" {% if request.GET.status == 'registered' %}selected{% endif %}>Registered</option>
+                        <option value="exited" {% if request.GET.status == 'exited' %}selected{% endif %}>Exited</option>
+                        <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Apply Filters
+                </button>
+                <a href="{% url 'dashboard:visitor_reports' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i> Clear All
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Data Section -->
+    <div class="data-section">
+        <div class="data-header">
+            <h2 class="data-title">
+                <i class="fas fa-users"></i> Visitor Records
+                <span class="badge status-badge status-registered">{{ total_visitors }} Records</span>
+            </h2>
+        </div>
+        
+        {% if visitors_with_history %}
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user"></i> Visitor</th>
+                            <th><i class="fas fa-home"></i> Resident</th>
+                            <th><i class="fas fa-phone"></i> Mobile</th>
+                            <th><i class="fas fa-bullseye"></i> Purpose</th>
+                            <th><i class="fas fa-sign-in-alt"></i> Entry Time</th>
+                            <th><i class="fas fa-sign-out-alt"></i> Exit Time</th>
+                            <th><i class="fas fa-clock"></i> Duration</th>
+                            <th><i class="fas fa-info-circle"></i> Status</th>
+                            <th><i class="fas fa-cog"></i> Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visitor_data in visitors_with_history %}
+                            <tr>
+                                <td>
+                                    <div class="visitor-name">
+                                        {{ visitor_data.visitor.visitor_name }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="resident-info">
+                                        {% if visitor_data.visitor.resident %}
+                                            {{ visitor_data.visitor.resident.user.get_full_name }} ({{ visitor_data.visitor.resident.flat_number }})
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if visitor_data.visitor.mobile_number %}
+                                        {{ visitor_data.visitor.mobile_number }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if visitor_data.visitor.purpose %}
+                                        {{ visitor_data.visitor.purpose }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if visitor_data.entry_time %}
+                                        {{ visitor_data.entry_time|date:"H:i:s" }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if visitor_data.exit_time %}
+                                        {{ visitor_data.exit_time|date:"H:i:s" }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if visitor_data.entry_time and visitor_data.exit_time %}
+                                        <span class="duration">{{ visitor_data.exit_time|timeuntil:visitor_data.entry_time }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if visitor_data.status == 'completed' %}
+                                        <span class="status-badge status-completed">{{ visitor_data.status|title }}</span>
+                                    {% elif visitor_data.status == 'approved' %}
+                                        <span class="status-badge status-approved">{{ visitor_data.status|title }}</span>
+                                    {% elif visitor_data.status == 'in_process' %}
+                                        <span class="status-badge status-in_process">{{ visitor_data.status|title }}</span>
+                                    {% elif visitor_data.status == 'rejected' %}
+                                        <span class="status-badge status-rejected">{{ visitor_data.status|title }}</span>
+                                    {% elif visitor_data.status == 'registered' %}
+                                        <span class="status-badge status-registered">{{ visitor_data.status|title }}</span>
+                                    {% elif visitor_data.status == 'exited' %}
+                                        <span class="status-badge status-exited">{{ visitor_data.status|title }}</span>
+                                    {% elif visitor_data.status == 'pending' %}
+                                        <span class="status-badge status-pending">{{ visitor_data.status|title }}</span>
+                                    {% else %}
+                                        <span class="status-badge">{{ visitor_data.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if visitor_data.visitor and visitor_data.visitor.id %}
+                                        <button onclick="viewDetails('{{ visitor_data.visitor.id }}')" class="action-btn">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    {% elif visitor_data.visitor %}
+                                        <button onclick="viewDetails('audit_{{ forloop.counter }}')" class="action-btn">
+                                            <i class="fas fa-info-circle"></i> Info
+                                        </button>
+                                    {% else %}
+                                        <button onclick="showVisitorInfo('{{ forloop.counter }}')" class="action-btn">
+                                            <i class="fas fa-info-circle"></i> Info
+                                        </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-users-slash"></i>
+                </div>
+                <h3 class="empty-title">No Visitor Records Found</h3>
+                <p>
+                    {% if request.GET.status or request.GET.search or request.GET.start_date or request.GET.end_date %}
+                        No visitor records match your current filters. Try adjusting your search criteria or date range.
+                    {% else %}
+                        No visitor records found in the system.
+                    {% endif %}
+                </p>
+                {% if request.GET.status or request.GET.search or request.GET.start_date or request.GET.end_date %}
+                    <a href="{% url 'dashboard:visitor_reports' %}" class="btn btn-primary">
+                        <i class="fas fa-times"></i> Clear All Filters
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+</div>
+
+<script>
+function exportReport() {
+    // Get current URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('export', 'true');
+    
+    // Create export URL
+    const exportUrl = `${window.location.pathname}?${urlParams.toString()}`;
+    
+    // Trigger download
+    window.location.href = exportUrl;
+}
+
+function viewDetails(visitorId) {
+    if (visitorId) {
+        // Check if it's an audit record
+        if (visitorId.startsWith('audit_')) {
+            // Handle audit record
+            showAuditModal(visitorId);
+        } else {
+            // Try multiple possible URLs for visitor details
+            const possibleUrls = [
+                `/visitors/detail/${visitorId}/`,
+                `/visitors/gate-pass/${visitorId}/`,
+                `/visitors/${visitorId}/`,
+                `/dashboard/visitor-detail/${visitorId}/`
+            ];
+            
+            // Try the first URL, if it fails, show a modal with details
+            const detailWindow = window.open(possibleUrls[0], '_blank', 'width=800,height=600');
+            
+            // Check if the window opened successfully
+            setTimeout(() => {
+                try {
+                    if (detailWindow.closed) {
+                        // If window closed immediately, URL might not exist
+                        showVisitorModal(visitorId);
+                    }
+                } catch (e) {
+                    // If there's an error, show modal instead
+                    showVisitorModal(visitorId);
+                }
+            }, 1000);
+        }
+    } else {
+        alert('Detailed view not available for this record');
+    }
+}
+
+function showVisitorInfo(index) {
+    // Show basic visitor info for records without IDs
+    const visitorData = {
+        index: index,
+        message: 'Basic visitor record information',
+        note: 'This record may be from audit logs and doesn\'t have detailed information available.'
+    };
+    
+    showBasicInfoModal(visitorData);
+}
+
+function showAuditModal(auditId) {
+    // Create a modal for audit record information
+    const modalHtml = `
+        <div class="modal fade" id="auditDetailModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Audit Record Information</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading audit record details...</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('auditDetailModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('auditDetailModal'));
+    modal.show();
+    
+    // Get the actual visitor data from the table row
+    const row = document.querySelector(`tr:nth-child(${parseInt(auditId.replace('audit_', '')) + 1})`);
+    if (row) {
+        const visitorName = row.querySelector('.visitor-name')?.textContent || 'Unknown';
+        const status = row.querySelector('.status-badge')?.textContent || 'Unknown';
+        
+        const modalBody = document.querySelector('#auditDetailModal .modal-body');
+        modalBody.innerHTML = `
+            <div class="alert alert-info">
+                <h6>Audit Record Information</h6>
+                <p><strong>Visitor Name:</strong> ${visitorName}</p>
+                <p><strong>Status:</strong> ${status}</p>
+                <p><strong>Record Type:</strong> Audit Log Entry</p>
+                <p class="text-muted">This is an audit record from the system logs. Detailed visitor information may not be available.</p>
+            </div>
+        `;
+    } else {
+        const modalBody = document.querySelector('#auditDetailModal .modal-body');
+        modalBody.innerHTML = `
+            <div class="alert alert-warning">
+                <h6>Audit Record</h6>
+                <p><strong>Record ID:</strong> ${auditId}</p>
+                <p><strong>Status:</strong> Audit log entry</p>
+                <p class="text-muted">This is an audit record from the system logs. Detailed visitor information is not available.</p>
+            </div>
+        `;
+    }
+}
+
+function showBasicInfoModal(data) {
+    // Create a modal with basic visitor information
+    const modalHtml = `
+        <div class="modal fade" id="basicInfoModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Visitor Information</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <h6>Visitor Record #${data.index}</h6>
+                            <p><strong>Message:</strong> ${data.message}</p>
+                            <p><strong>Note:</strong> ${data.note}</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('basicInfoModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('basicInfoModal'));
+    modal.show();
+}
+
+function showVisitorModal(visitorId) {
+    // Create a modal with visitor information
+    const modalHtml = `
+        <div class="modal fade" id="visitorDetailModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Visitor Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading visitor details...</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('visitorDetailModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('visitorDetailModal'));
+    modal.show();
+    
+    // Fetch visitor details via AJAX
+    fetch(`/api/visitor-detail/${visitorId}/`)
+        .then(response => response.json())
+        .then(data => {
+            const modalBody = document.querySelector('#visitorDetailModal .modal-body');
+            if (data.success) {
+                modalBody.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Visitor Information</h6>
+                            <p><strong>Name:</strong> ${data.visitor_name || 'N/A'}</p>
+                            <p><strong>Mobile:</strong> ${data.mobile_number || 'N/A'}</p>
+                            <p><strong>Purpose:</strong> ${data.purpose || 'N/A'}</p>
+                            <p><strong>Status:</strong> <span class="badge bg-primary">${data.status || 'N/A'}</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Visit Details</h6>
+                            <p><strong>Entry Time:</strong> ${data.entry_time || 'N/A'}</p>
+                            <p><strong>Exit Time:</strong> ${data.exit_time || 'N/A'}</p>
+                            <p><strong>Duration:</strong> ${data.duration || 'N/A'}</p>
+                            <p><strong>Host:</strong> ${data.host_name || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                modalBody.innerHTML = `
+                    <div class="alert alert-warning">
+                        <h6>Visitor Details</h6>
+                        <p><strong>ID:</strong> ${visitorId}</p>
+                        <p><strong>Status:</strong> Detailed view not available</p>
+                        <p class="text-muted">This visitor record may be from audit logs and doesn't have detailed information available.</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            const modalBody = document.querySelector('#visitorDetailModal .modal-body');
+            modalBody.innerHTML = `
+                <div class="alert alert-info">
+                    <h6>Visitor Information</h6>
+                    <p><strong>ID:</strong> ${visitorId}</p>
+                    <p><strong>Status:</strong> Basic visitor record</p>
+                    <p class="text-muted">Detailed information is not available for this record. This may be an audit log entry.</p>
+                </div>
+            `;
+        });
+}
+</script>
+{% endblock %}

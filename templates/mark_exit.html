@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Mark Exit - Smart Gate Pass System{% endblock %}
+
+{% block content %}
+<div class="container-custom">
+    <div class="card-custom p-4 p-md-5 narrow-card narrow-card--md">
+        <h2 class="text-center mb-4">Mark Visitor Exit</h2>
+        
+        <div class="alert alert-info mb-4">
+            <strong>Visitor:</strong> {{ visitor.visitor_name }}<br>
+            <strong>Resident:</strong> {{ visitor.resident.user.get_full_name }} ({{ visitor.resident.flat_number }})<br>
+            <strong>Entry Time:</strong> {{ visitor.entry_time|date:"d-M-Y H:i:s" }}
+        </div>
+        
+        <p class="text-center text-muted mb-4">
+            Are you sure you want to mark this visitor's exit?
+        </p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            <button type="submit" class="btn btn-danger btn-lg w-100 mb-2">
+                ✓ Mark Exit
+            </button>
+        </form>
+        
+        <a href="{% url 'visitors:visitor_dashboard' %}" class="btn btn-secondary w-100">Cancel</a>
+    </div>
+</div>
+{% endblock %}

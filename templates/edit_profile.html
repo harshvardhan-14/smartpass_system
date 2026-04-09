@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile - Smart Gate Pass System{% endblock %}
+
+{% block content %}
+<div class="container-custom">
+    <div class="card-custom p-4 p-md-5 narrow-card narrow-card--lg">
+        <h2 class="text-center mb-4">Edit Profile</h2>
+        
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label class="form-label">Username:</label>
+                <input type="text" class="form-control" value="{{ profile.user.username }}" readonly>
+            </div>
+            
+            <!-- Profile Photo Section -->
+            <div class="mb-3">
+                <label class="form-label">Profile Photo:</label>
+                {% if profile.profile_photo %}
+                    <div class="mb-2">
+                        <img src="{{ profile.profile_photo.url }}" alt="Current Profile Photo" class="rounded" style="max-width: 100px; max-height: 100px; object-fit: cover;">
+                        <small class="text-muted d-block mt-1">Current photo</small>
+                    </div>
+                {% else %}
+                    <div class="mb-2">
+                        <div class="rounded" style="width: 100px; height: 100px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-user fa-2x text-muted"></i>
+                        </div>
+                        <small class="text-muted d-block mt-1">No photo uploaded</small>
+                    </div>
+                {% endif %}
+                <input type="file" class="form-control" name="profile_photo" accept="image/*">
+                <small class="form-text text-muted">Optional: Upload new profile photo (Max size: 5MB. Formats: JPEG, PNG)</small>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Email:</label>
+                <input type="email" class="form-control" name="email" value="{{ profile.user.email }}">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">First Name:</label>
+                <input type="text" class="form-control" name="first_name" value="{{ profile.user.first_name }}">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Last Name:</label>
+                <input type="text" class="form-control" name="last_name" value="{{ profile.user.last_name }}">
+            </div>
+            
+            {% if profile.flat_number %}
+                <div class="mb-3">
+                    <label class="form-label">Flat Number:</label>
+                    <input type="text" class="form-control" name="flat_number" value="{{ profile.flat_number }}">
+                </div>
+            {% endif %}
+            
+            {% if profile.phone_number %}
+                <div class="mb-3">
+                    <label class="form-label">Phone Number:</label>
+                    <input type="text" class="form-control" name="phone_number" value="{{ profile.phone_number }}">
+                </div>
+            {% endif %}
+            
+            {% if profile.employee_id %}
+                <div class="mb-3">
+                    <label class="form-label">Employee ID:</label>
+                    <input type="text" class="form-control" name="employee_id" value="{{ profile.employee_id }}">
+                </div>
+            {% endif %}
+            
+            {% if profile.shift %}
+                <div class="mb-3">
+                    <label class="form-label">Shift:</label>
+                    <select class="form-control" name="shift">
+                        <option value="morning" {% if profile.shift == 'morning' %}selected{% endif %}>Morning</option>
+                        <option value="evening" {% if profile.shift == 'evening' %}selected{% endif %}>Evening</option>
+                        <option value="night" {% if profile.shift == 'night' %}selected{% endif %}>Night</option>
+                    </select>
+                </div>
+            {% endif %}
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary-custom">
+                    <i class="fas fa-save me-2"></i>Save Changes
+                </button>
+                <a href="{% url 'accounts:user_profile' %}" class="btn btn-secondary ms-2">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

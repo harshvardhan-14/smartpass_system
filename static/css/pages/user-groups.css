@@ -1,0 +1,434 @@
+/* User groups — scoped to .page-user-groups */
+
+.page-user-groups {
+    background: transparent;
+    min-height: calc(100vh - 120px);
+    padding: 1.25rem 0 2.5rem;
+}
+
+.page-user-groups > .container {
+    max-width: 1200px;
+}
+
+.page-user-groups .admin-panel {
+    position: relative;
+}
+
+.page-user-groups .admin-panel h1 {
+    background: none;
+    -webkit-text-fill-color: #fff;
+    color: #fff;
+}
+
+.page-user-groups .btn-outline-light:hover {
+    color: var(--color-primary-dark) !important;
+}
+
+.page-user-groups .stats-card .icon {
+    background: none;
+    -webkit-background-clip: unset;
+}
+
+/* Dark inputs: placeholders and selected text stay readable on black/orange theme */
+.page-user-groups .filter-card .form-control,
+.page-user-groups .filter-card .form-select {
+    background: rgba(12, 12, 12, 0.92);
+    color: #f4f4f5;
+    border-color: rgba(234, 88, 12, 0.35);
+}
+
+.page-user-groups .filter-card .form-control::placeholder {
+    color: rgba(244, 244, 245, 0.45);
+}
+
+.page-user-groups .filter-card .form-control:focus,
+.page-user-groups .filter-card .form-select:focus {
+    background: rgba(20, 20, 20, 0.98);
+    color: #fafafa;
+    border-color: var(--color-primary, #ea580c);
+    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.22);
+}
+
+.page-user-groups .filter-card .form-select option {
+    background: #141414;
+    color: #f4f4f5;
+}
+
+.page-user-groups .user-groups-filter.filter-card {
+    border-color: rgba(234, 88, 12, 0.22);
+}
+
+.page-user-groups .groups-card,
+.page-user-groups .user-groups-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
+    margin-bottom: 2rem;
+}
+
+.page-user-groups .groups-card h5,
+.page-user-groups .user-groups-card h5 {
+    color: var(--color-text);
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.page-user-groups .user-group-section {
+    margin-bottom: 2rem;
+}
+
+.page-user-groups .user-group-section h6 {
+    color: var(--color-primary-dark);
+    font-weight: 700;
+    margin-bottom: 1rem;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.page-user-groups .user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.page-user-groups .user-card {
+    background: var(--color-primary-muted);
+    border: 1px solid rgba(234, 88, 12, 0.2);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.page-user-groups .user-card:hover {
+    background: #fff;
+    box-shadow: var(--shadow-md);
+    border-color: rgba(234, 88, 12, 0.35);
+}
+
+.page-user-groups .user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-right: 1rem;
+}
+
+.page-user-groups .user-info h6 {
+    color: var(--color-text);
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+    font-size: 0.95rem;
+}
+
+.page-user-groups .user-info p {
+    color: var(--color-text-muted);
+    margin-bottom: 0.2rem;
+    font-size: 0.875rem;
+}
+
+.page-user-groups .user-info small {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+}
+
+.page-user-groups .user-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.page-user-groups .user-actions .btn {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    border-radius: var(--radius-sm);
+}
+
+.page-user-groups .alert-info {
+    background: var(--color-primary-muted);
+    border: 1px solid rgba(234, 88, 12, 0.25);
+    color: var(--color-primary-dark);
+    border-radius: var(--radius-md);
+}
+
+.page-user-groups .empty-state {
+    color: var(--color-text-muted);
+}
+
+.page-user-groups .empty-state i {
+    color: var(--color-border);
+}
+
+.page-user-groups .empty-state h6 {
+    color: var(--color-text);
+}
+
+/* Modal accents (modals may render inside page) */
+.page-user-groups .bg-gradient-purple,
+.modal .bg-gradient-purple {
+    background: var(--gradient-hero) !important;
+}
+
+.page-user-groups .bg-light-purple,
+.modal .bg-light-purple {
+    background: var(--color-primary-muted) !important;
+}
+
+.page-user-groups .border-purple,
+.modal .border-purple {
+    border: 2px solid var(--color-primary) !important;
+}
+
+.page-user-groups .text-purple,
+.modal .text-purple {
+    color: var(--color-primary-dark) !important;
+}
+
+.page-user-groups .card.border-purple .card-header,
+.modal .card.border-purple .card-header {
+    border-bottom: 2px solid var(--color-primary);
+}
+
+.page-user-groups .card.border-purple .card-body strong,
+.modal .card.border-purple .card-body strong {
+    color: var(--color-primary-dark);
+}
+
+.page-user-groups .card.border-purple .card-body i,
+.modal .card.border-purple .card-body i {
+    color: var(--color-primary);
+}
+
+.page-user-groups .modal-content,
+.modal-content {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--color-border);
+}
+
+.page-user-groups .alert-info h6 {
+    color: var(--color-primary-dark);
+}
+
+/* User type columns */
+.page-user-groups .user-type-section {
+    background: var(--color-surface);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    height: 100%;
+    transition: box-shadow 0.25s, transform 0.25s;
+}
+
+.page-user-groups .user-type-section:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.page-user-groups .user-type-section > .section-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 2px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page-user-groups .user-type-section > .section-header h6 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1rem;
+    color: inherit;
+}
+
+.page-user-groups .section-header.admin-header {
+    background: var(--gradient-hero);
+    color: #fff;
+    border-bottom: none;
+}
+
+/* Unified orange accent headers (premium dark theme) */
+.page-user-groups .section-header.resident-header {
+    background: linear-gradient(135deg, #c2410c 0%, #9a3412 100%);
+    color: #fff;
+    border-bottom: none;
+}
+
+.page-user-groups .section-header.security-header {
+    background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+    color: #fff;
+    border-bottom: none;
+}
+
+.page-user-groups .section-header.visitor-header {
+    background: linear-gradient(135deg, #431407 0%, #292524 100%);
+    color: #fff;
+    border-bottom: 1px solid rgba(234, 88, 12, 0.35);
+}
+
+.page-user-groups .section-content {
+    padding: 1.15rem 1.1rem;
+    max-height: min(52vh, 440px);
+    overflow-y: auto;
+}
+
+.page-user-groups .ug-pagination {
+    margin-top: 0.85rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid rgba(234, 88, 12, 0.15);
+}
+
+.page-user-groups .ug-pagination .page-link {
+    background: rgba(12, 12, 12, 0.85);
+    border-color: rgba(234, 88, 12, 0.35);
+    color: #fed7aa;
+}
+
+.page-user-groups .ug-pagination .page-link:hover {
+    background: rgba(234, 88, 12, 0.2);
+    border-color: var(--color-primary, #ea580c);
+    color: #fff;
+}
+
+.page-user-groups .ug-pagination .page-item.disabled .page-link {
+    background: rgba(24, 24, 24, 0.9);
+    color: rgba(250, 250, 250, 0.55);
+    border-color: rgba(234, 88, 12, 0.2);
+}
+
+.page-user-groups .ug-count-badge {
+    background: rgba(0, 0, 0, 0.35) !important;
+    color: #ffedd5 !important;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+    border: 1px solid rgba(255, 237, 213, 0.35);
+}
+
+.page-user-groups .ug-count-badge--muted {
+    color: rgba(255, 237, 213, 0.85) !important;
+    border-color: rgba(234, 88, 12, 0.3);
+}
+
+.page-user-groups .section-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.page-user-groups .section-content::-webkit-scrollbar-track {
+    background: rgba(30, 30, 30, 0.9);
+    border-radius: 8px;
+}
+
+.page-user-groups .section-content::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 8px;
+}
+
+.page-user-groups .user-type-section .user-item {
+    display: flex;
+    align-items: center;
+    padding: 0.85rem;
+    margin-bottom: 0.65rem;
+    background: var(--color-primary-muted);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(234, 88, 12, 0.15);
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.page-user-groups .user-type-section .user-item:hover {
+    background: rgba(234, 88, 12, 0.12);
+    transform: translateX(4px);
+    box-shadow: var(--shadow-sm);
+    border-color: rgba(234, 88, 12, 0.4);
+}
+
+.page-user-groups .user-type-section .user-avatar {
+    margin-right: 0.85rem;
+}
+
+.page-user-groups .user-type-section .user-avatar::after {
+    display: none;
+}
+
+.page-user-groups .user-type-section .user-info h6 {
+    color: var(--color-text);
+}
+
+.page-user-groups .user-type-section .user-info small {
+    color: var(--color-text-muted);
+}
+
+.page-user-groups .user-type-section .user-actions .btn {
+    border: 1px solid rgba(234, 88, 12, 0.55);
+    background: rgba(12, 12, 12, 0.6);
+    color: #fed7aa;
+    box-shadow: none;
+}
+
+.page-user-groups .user-type-section .user-actions .btn:hover {
+    background: var(--gradient-primary);
+    color: #fff;
+    border-color: transparent;
+}
+
+.page-user-groups .visitor-summary {
+    text-align: center;
+    padding: 2rem 1.25rem;
+    background: var(--color-primary-muted);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(234, 88, 12, 0.2);
+}
+
+.page-user-groups .visitor-summary p {
+    color: var(--color-text-muted);
+}
+
+.page-user-groups .visitor-summary .btn-outline-info {
+    background: #fff;
+    color: var(--color-primary-dark);
+    border: 2px solid var(--color-primary);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+}
+
+.page-user-groups .visitor-summary .btn-outline-info:hover {
+    background: var(--gradient-primary);
+    color: #fff;
+    border-color: transparent;
+}
+
+@media (max-width: 992px) {
+    .page-user-groups .section-content {
+        max-height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-user-groups .user-type-section .user-item {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .page-user-groups .user-type-section .user-avatar {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-user-groups .user-type-section .user-actions {
+        margin-left: 0;
+        margin-top: 0.5rem;
+        justify-content: center;
+    }
+}

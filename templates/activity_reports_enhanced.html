@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Activity Reports - Smart Gate Pass System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dashboard-unified.css' %}">
+<link rel="stylesheet" href="{% static 'css/pages/reports-hub.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 page-reports">
+    <!-- Admin Panel Header -->
+    <div class="admin-panel">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{% url 'dashboard:reports' %}" class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left"></i> Back to Reports
+                    </a>
+                    <div>
+                        <h1 class="mb-0">📊 Activity Reports</h1>
+                        <p class="mb-0 mt-1 opacity-75">System activity monitoring and analytics</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="stats-card d-inline-block">
+                    <div class="icon">📈</div>
+                    <h3>{{ activities_page.paginator.count }}</h3>
+                    <h5>Matching activities</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Section -->
+    <div class="filter-card page-reports-filter mb-4">
+        <h5><i class="fas fa-sliders-h"></i> Filter activities</h5>
+        
+        <form method="GET" class="mb-4">
+            <div class="row g-3">
+                <!-- Start Date -->
+                <div class="col-md-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control" 
+                           value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                
+                <!-- End Date -->
+                <div class="col-md-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control" 
+                           value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                
+                <!-- Action Type -->
+                <div class="col-md-3">
+                    <label for="action_type" class="form-label">Action Type</label>
+                    <select name="action_type" id="action_type" class="form-select">
+                        <option value="">All Actions</option>
+                        {% for action_value, action_label in action_types %}
+                            <option value="{{ action_value }}" 
+                                    {% if action_type == action_value %}selected{% endif %}>
+                                {{ action_label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Actions -->
+                <div class="col-md-3">
+                    <div class="filter-actions d-flex gap-2">
+                        <button type="submit" class="btn btn-primary-custom">
+                            <i class="fas fa-search"></i> Apply
+                        </button>
+                        <a href="{% url 'dashboard:activity_reports' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Activities List -->
+    <div class="activities-card page-reports-activity">
+        <h5><i class="fas fa-chart-line"></i> System Activities</h5>
+        
+        {% if activities %}
+            {% for activity in activities %}
+                <div class="activity-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6>
+                                {% if activity.action_type == 'user_login' %}
+                                    <i class="fas fa-sign-in-alt text-success"></i>
+                                {% elif activity.action_type == 'user_logout' %}
+                                    <i class="fas fa-sign-out-alt text-warning"></i>
+                                {% elif activity.action_type == 'visitor_register' %}
+                                    <i class="fas fa-user-plus text-info"></i>
+                                {% elif activity.action_type == 'visitor_approve' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% elif activity.action_type == 'visitor_reject' %}
+                                    <i class="fas fa-times-circle text-danger"></i>
+                                {% else %}
+                                    <i class="fas fa-cog text-primary"></i>
+                                {% endif %}
+                                {{ activity.get_action_type_display }}
+                            </h6>
+                            <p class="mb-1">{{ activity.description }}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-user"></i> {{ activity.user.username|default:'System' }} | 
+                                <i class="fas fa-clock"></i> {{ activity.timestamp|date:"M d, Y H:i" }} |
+                                <i class="fas fa-globe"></i> {{ activity.ip_address|default:'N/A' }}
+                            </small>
+                        </div>
+                        <div>
+                            {% if activity.status == 'success' %}
+                                <span class="badge badge-success">Success</span>
+                            {% elif activity.status == 'failure' %}
+                                <span class="badge badge-danger">Failure</span>
+                            {% elif activity.status == 'warning' %}
+                                <span class="badge badge-warning">Warning</span>
+                            {% else %}
+                                <span class="badge badge-primary">Info</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-chart-line"></i>
+                <h5 class="text-muted">No Activities Found</h5>
+                <p class="text-muted">No system activities found matching your criteria.</p>
+            </div>
+        {% endif %}
+
+        {% if activities_page.paginator.num_pages > 1 %}
+        <nav class="mt-4" aria-label="Activity pagination">
+            <ul class="pagination pagination-sm justify-content-center flex-wrap mb-0">
+                {% if activities_page.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if activity_filter_query %}{{ activity_filter_query }}&{% endif %}page={{ activities_page.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+                <li class="page-item disabled">
+                    <span class="page-link">Page {{ activities_page.number }} of {{ activities_page.paginator.num_pages }}</span>
+                </li>
+                {% if activities_page.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if activity_filter_query %}{{ activity_filter_query }}&{% endif %}page={{ activities_page.next_page_number }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
