@@ -1,10 +1,12 @@
 Django==4.2.0
 djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.3.1
 python-decouple==3.8
 twilio==8.10.0
 psycopg2-binary>=2.9.9
 python-dotenv==1.0.0
 Pillow>=10.0.0
-channels==4.0.0
-daphne==4.0.0
 qrcode>=7.4.2
+drf-yasg==1.21.7
+django-filter==23.5

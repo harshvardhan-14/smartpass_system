@@ -4,24 +4,20 @@ from . import views
 app_name = 'visitors'
 
 urlpatterns = [
-    # Visitor Management
-    path('register/', views.register_visitor, name='register_visitor'),
-    path('verify-otp/<int:visitor_id>/', views.verify_otp, name='verify_otp'),
-    path('mark-exit/<int:visitor_id>/', views.mark_exit, name='mark_exit'),
-    path('detail/<int:visitor_id>/', views.visitor_detail, name='visitor_detail'),
-    
-    # Gate Pass
-    path('gate-pass/<int:pass_id>/', views.gate_pass_details, name='gate_pass_details'),
-    
-    # History
-    path('history/', views.visitor_history, name='visitor_history'),
-    
-    # List
-    path('list/', views.visitor_list, name='visitor_list'),
-    
-    # Dashboard
-    path('dashboard/', views.dashboard, name='visitor_dashboard'),
-    
-    # API
-    path('api/search-residents/', views.search_residents, name='search_residents'),
+    # Visitors
+    path('', views.VisitorListCreateView.as_view(), name='visitor_list_create'),
+    path('<int:visitor_id>/', views.VisitorDetailView.as_view(), name='visitor_detail'),
+    path('<int:visitor_id>/verify-otp/', views.VerifyOTPView.as_view(), name='verify_otp'),
+    path('<int:visitor_id>/mark-exit/', views.MarkExitView.as_view(), name='mark_exit'),
+
+    # Gate Passes
+    path('gate-passes/', views.GatePassListView.as_view(), name='gate_pass_list'),
+    path('gate-passes/<int:pass_id>/', views.GatePassDetailView.as_view(), name='gate_pass_detail'),
+
+    # Dashboard & History
+    path('dashboard/', views.VisitorDashboardView.as_view(), name='visitor_dashboard'),
+    path('history/', views.VisitorHistoryView.as_view(), name='visitor_history'),
+
+    # Resident search
+    path('search-residents/', views.ResidentSearchView.as_view(), name='search_residents'),
 ]

@@ -173,28 +173,12 @@ class SecurityGuardRegistrationForm(forms.Form):
     
     def clean_profile_photo(self):
         photo = self.cleaned_data.get('profile_photo')
-        print(f"DEBUG: clean_profile_photo called with photo: {photo}")
-        
         if photo:
-            print(f"DEBUG: Photo validation - Name: {photo.name}")
-            print(f"DEBUG: Photo validation - Size: {photo.size} bytes")
-            print(f"DEBUG: Photo validation - Content type: {photo.content_type}")
-            
-            # Check file size (max 5MB)
             if photo.size > 5 * 1024 * 1024:
-                print("DEBUG: Photo too large - raising ValidationError")
                 raise forms.ValidationError('Photo size should be less than 5MB')
-            
-            # Check file type
             allowed_types = ['image/jpeg', 'image/png', 'image/jpg']
             if photo.content_type not in allowed_types:
-                print(f"DEBUG: Invalid file type - {photo.content_type}")
                 raise forms.ValidationError('Only JPEG and PNG images are allowed')
-            
-            print("DEBUG: Photo validation passed")
-        else:
-            print("DEBUG: No photo provided")
-        
         return photo
     
     def clean(self):

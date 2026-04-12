@@ -136,7 +136,7 @@ class AuditService:
             new_values={
                 'pass_id': gate_pass.pass_id,
                 'visitor': gate_pass.visitor.visitor_name,
-                'resident': gate_pass.resident.flat_number,
+                'resident': gate_pass.visitor.resident.flat_number,
                 'valid_till': gate_pass.valid_till.isoformat()
             },
             request=request
@@ -252,18 +252,10 @@ def log_user_logout(sender, request, user, **kwargs):
 def log_user_creation(sender, instance, created, **kwargs):
     """Signal handler for user creation"""
     if created:
-        # Try to get current user from thread local (if available)
-        try:
-            from django.contrib.auth import get_user
-            current_user = get_user(request=None)
-            if current_user.is_authenticated:
-                AuditService.log_user_created(instance, current_user)
-        except:
-            # Fallback - log without creator
-            AuditService.log_activity(
-                user=None,
-                action_type='user_create',
-                description=f"User {instance.username} created automatically",
-                target_model='CustomUser',
-                target_id=instance.id
-            )
+        AuditService.log_activity(
+            user=None,
+            action_type='user_create',
+            description=f'User {instance.username} ({instance.get_user_type_display()}) created',
+            target_model='CustomUser',
+            target_id=instance.id,
+        )

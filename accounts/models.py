@@ -57,27 +57,21 @@ class CustomUser(AbstractUser):
         # Auto-delete Admin profile if user_type is changed from 'admin'
         if old_user_type == 'admin' and self.user_type != 'admin':
             try:
-                admin_profile = Admin.objects.get(user=self)
-                admin_profile.delete()
-                print(f"🗑️ Auto-deleted Admin profile for {self.username}")
+                Admin.objects.get(user=self).delete()
             except Admin.DoesNotExist:
                 pass
-        
+
         # Auto-delete Resident profile if user_type is changed from 'resident'
         if old_user_type == 'resident' and self.user_type != 'resident':
             try:
-                resident_profile = Resident.objects.get(user=self)
-                resident_profile.delete()
-                print(f"🗑️ Auto-deleted Resident profile for {self.username}")
+                Resident.objects.get(user=self).delete()
             except Resident.DoesNotExist:
                 pass
-        
+
         # Auto-delete SecurityGuard profile if user_type is changed from 'security' or 'guard'
         if old_user_type in ['security', 'guard'] and self.user_type not in ['security', 'guard']:
             try:
-                guard_profile = SecurityGuard.objects.get(user=self)
-                guard_profile.delete()
-                print(f"🗑️ Auto-deleted SecurityGuard profile for {self.username}")
+                SecurityGuard.objects.get(user=self).delete()
             except SecurityGuard.DoesNotExist:
                 pass
 
