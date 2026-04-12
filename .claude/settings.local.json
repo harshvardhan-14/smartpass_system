@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed -i \"s/app_name = ''accounts''/app_name = ''accounts_api''/\" accounts/api_urls.py)",
+      "Bash(sed -i \"s/app_name = ''visitors''/app_name = ''visitors_api''/\" visitors/api_urls.py)",
+      "Bash(sed -i \"s/app_name = ''dashboard''/app_name = ''dashboard_api''/\" dashboard/api_urls.py)",
+      "Bash(sed -i \"s/app_name = ''audit''/app_name = ''audit_api''/\" audit/api_urls.py)"
+    ]
+  }
+}

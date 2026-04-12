@@ -1,23 +1,16 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenRefreshView
-
 from . import views
 
 app_name = 'accounts'
 
 urlpatterns = [
-    # Auth
-    path('auth/login/', views.LoginView.as_view(), name='login'),
-    path('auth/logout/', views.LogoutView.as_view(), name='logout'),
-    path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('auth/forgot-password/', views.ForgotPasswordView.as_view(), name='forgot_password'),
-    path('auth/reset-password/<int:user_id>/', views.ResetPasswordView.as_view(), name='reset_password'),
-
-    # Registration
-    path('accounts/register/resident/', views.RegisterResidentView.as_view(), name='register_resident'),
-    path('accounts/register/guard/', views.RegisterSecurityGuardView.as_view(), name='register_guard'),
-
-    # Profile
-    path('accounts/me/', views.MeView.as_view(), name='me'),
-    path('accounts/profile/', views.ProfileView.as_view(), name='profile'),
+    path('', views.home, name='home'),
+    path('login/', views.user_login, name='login'),
+    path('logout/', views.user_logout, name='logout'),
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
+    path('reset-password/<int:user_id>/', views.reset_password_verify, name='reset_password_verify'),
+    path('register/resident/', views.register_resident, name='register_resident'),
+    path('register/guard/', views.register_security_guard, name='register_guard'),
+    path('profile/', views.user_profile, name='user_profile'),
+    path('edit-profile/', views.edit_profile, name='edit_profile'),
 ]
